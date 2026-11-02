@@ -148,6 +148,7 @@ export function AppSidebar({ collapsed, onToggle, user }: AppSidebarProps) {
                   href={item.href}
                   title={collapsed ? item.label : undefined}
                   aria-current={active ? "page" : undefined}
+                  onMouseEnter={()=>router.prefetch(item.href)}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                     collapsed && "justify-center",

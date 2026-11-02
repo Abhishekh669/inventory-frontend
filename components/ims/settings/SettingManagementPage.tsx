@@ -9,7 +9,7 @@ import { SettingsForm } from "./SettingForm"
 
 function SettingManagementPage({ user }: { user: User }) {
   const { data, isLoading, isError, refetch } = useGetSettingInfo()
-
+  
   if (!user) return null
 
   return (
