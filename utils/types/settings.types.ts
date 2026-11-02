@@ -21,3 +21,21 @@ export interface Setting {
     low_stock_default: number;
     bill_footer: string | null;
   }
+
+
+ export interface Unit {
+  id: string
+  name: string
+  allow_decimal: boolean
+}
+
+export interface CreateUnit {
+  name: string
+  allow_decimal: boolean
+}
+
+export interface UpdateUnit {
+  id: string
+  name: string
+  allow_decimal: boolean
+}
