@@ -61,3 +61,32 @@ export function getActionError(res: unknown, fallback: string) {
   }
   return fallback
 }
+
+
+
+
+
+// utils/helper/generate-sku.ts
+
+const clean = (value: string, length: number) =>
+  value
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, length);
+
+const randomSuffix = (length = 5) => {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I to avoid confusion
+  const bytes = crypto.getRandomValues(new Uint8Array(length));
+  return Array.from(bytes, (b) => chars[b % chars.length]).join("");
+};
+
+/**
+ * Example: generateSku("cement", "OPC Cement 50kg") -> "CEM-OPCC-K7M3Q"
+ * Format: CATEGORY(3) - NAME(4) - RANDOM(5), well under the 50 character limit.
+ * The backend unique constraint still guards against the rare collision.
+ */
+export const generateSku = (categorySlug: string, productName: string) => {
+  const cat = clean(categorySlug, 3) || "GEN";
+  const name = clean(productName, 4) || "ITEM";
+  return `${cat}-${name}-${randomSuffix()}`;
+};
