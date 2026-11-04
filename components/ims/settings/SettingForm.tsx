@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Loader2, RotateCcw, Save } from 'lucide-react'
+import { Building2, Loader2, MessageSquareText, ReceiptText, RotateCcw, Save, type LucideIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
@@ -131,10 +131,14 @@ export function SettingsForm({ setting }: { setting: Setting }) {
   return (
     <form
       onSubmit={saveSettings}
-      className="grid items-start gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1fr)_20rem]"
+      className="grid items-start gap-x-10 gap-y-6 lg:grid-cols-[minmax(0,1fr)_20rem]"
     >
-      <div className="flex min-w-0 flex-col">
-        <FormSection title="Business profile" description="Shown at the top of every bill.">
+      <div className="flex min-w-0 flex-col gap-6">
+        <FormSection
+          icon={Building2}
+          title="Business profile"
+          description="Shown at the top of every bill."
+        >
           <div className="grid gap-5 sm:grid-cols-2">
             <Field label="Business name" id="name" value={form.name} onChange={(v) => updateField('name', v)} required />
             <Field label="Phone number" id="phone" value={form.phone} onChange={(v) => updateField('phone', v)} placeholder="Optional" />
@@ -156,7 +160,11 @@ export function SettingsForm({ setting }: { setting: Setting }) {
           </div>
         </FormSection>
 
-        <FormSection title="Billing defaults" description="Used when you create new products and bills.">
+        <FormSection
+          icon={ReceiptText}
+          title="Billing defaults"
+          description="Used when you create new products and bills."
+        >
           <div className="grid gap-5 sm:grid-cols-2">
             <Field
               label="Default VAT rate"
@@ -183,7 +191,11 @@ export function SettingsForm({ setting }: { setting: Setting }) {
           </div>
         </FormSection>
 
-        <FormSection title="Bill footer" description="Printed at the bottom of every bill.">
+        <FormSection
+          icon={MessageSquareText}
+          title="Bill footer"
+          description="Printed at the bottom of every bill."
+        >
           <div className="flex flex-col gap-2">
             <Label htmlFor="billFooter">Footer message</Label>
             <Textarea
@@ -196,9 +208,9 @@ export function SettingsForm({ setting }: { setting: Setting }) {
           </div>
         </FormSection>
 
-        <div className="flex flex-wrap gap-x-6 gap-y-1 border-t pt-6 text-xs text-muted-foreground">
-          <span>Created {formatDate(setting.created_at)}</span>
-          <span className="break-all">ID {setting.id}</span>
+        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+          <span className="rounded-full border bg-muted/40 px-3 py-1">Created {formatDate(setting.created_at)}</span>
+          <span className="break-all rounded-full border bg-muted/40 px-3 py-1">ID {setting.id}</span>
         </div>
       </div>
 
@@ -207,19 +219,36 @@ export function SettingsForm({ setting }: { setting: Setting }) {
       <div
         inert={!isDirty}
         className={cn(
-          'sticky bottom-4 z-10 col-span-full transition-all duration-200 motion-reduce:transition-none',
+          'sticky bottom-4 z-10 col-span-full flex justify-center transition-all duration-200 motion-reduce:transition-none',
           isDirty ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-3 opacity-0'
         )}
       >
-        <div className="mx-auto flex max-w-xl items-center justify-between gap-3 rounded-lg border bg-background/95 px-4 py-3 shadow-lg backdrop-blur">
-          <p className="text-sm font-medium">
-            {isSaving ? 'Saving changes...' : 'You have unsaved changes'}
+        <div className="flex w-full max-w-xl items-center justify-between gap-3 rounded-full bg-foreground py-2 pl-5 pr-2 text-background shadow-xl">
+          <p className="flex items-center gap-2.5 text-sm font-medium">
+            <span className="relative flex size-2" aria-hidden="true">
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-amber-400 opacity-75 motion-reduce:animate-none" />
+              <span className="relative inline-flex size-2 rounded-full bg-amber-400" />
+            </span>
+            {isSaving ? 'Saving changes...' : 'Unsaved changes'}
           </p>
-          <div className="flex gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={resetForm} disabled={isSaving}>
+          <div className="flex gap-1.5">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={resetForm}
+              disabled={isSaving}
+              className="rounded-full text-background hover:bg-background/15 hover:text-background"
+            >
               <RotateCcw data-icon="inline-start" /> Reset
             </Button>
-            <Button type="submit" size="sm" disabled={isSaving} aria-busy={isSaving}>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={isSaving}
+              aria-busy={isSaving}
+              className="rounded-full bg-background text-foreground hover:bg-background/90"
+            >
               {isSaving ? (
                 <Loader2 data-icon="inline-start" className="animate-spin" />
               ) : (
@@ -235,26 +264,39 @@ export function SettingsForm({ setting }: { setting: Setting }) {
 }
 
 function FormSection({
+  icon: Icon,
   title,
   description,
   children,
 }: {
+  icon: LucideIcon
   title: string
   description: string
   children: React.ReactNode
 }) {
   const headingId = `${title.toLowerCase().replace(/\s+/g, '-')}-heading`
   return (
-    <section aria-labelledby={headingId} className="border-t py-8 first:border-t-0 first:pt-0">
-      <div className="mb-5">
-        <h2 id={headingId} className="text-base font-semibold">
-          {title}
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+    <section aria-labelledby={headingId} className="rounded-2xl border bg-card shadow-sm">
+      <div className="flex items-center gap-3 border-b px-5 py-4 sm:px-6">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <Icon className="size-[18px]" aria-hidden="true" />
+        </div>
+        <div className="min-w-0">
+          <h2 id={headingId} className="text-sm font-semibold">
+            {title}
+          </h2>
+          <p className="text-xs text-muted-foreground">{description}</p>
+        </div>
       </div>
-      {children}
+      <div className="px-5 py-5 sm:px-6">{children}</div>
     </section>
   )
+}
+
+// Zig-zag bottom edge so the preview reads as a torn paper receipt.
+const TORN_EDGE: React.CSSProperties = {
+  WebkitMask: 'conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%',
+  mask: 'conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 14px 100%',
 }
 
 function BillPreview({ form }: { form: SettingForm }) {
@@ -262,47 +304,61 @@ function BillPreview({ form }: { form: SettingForm }) {
 
   return (
     <aside aria-label="Bill preview" className="lg:sticky lg:top-6">
-      <p className="mb-2 text-sm font-medium">Bill preview</p>
-      <div className="rounded-lg border bg-background p-5 shadow-sm">
-        <div className="text-center">
-          <p className={cn('break-words text-base font-semibold', !form.name && 'text-muted-foreground/60')}>
-            {form.name || 'Business name'}
-          </p>
-          {form.address && <p className="mt-1 break-words text-xs text-muted-foreground">{form.address}</p>}
-          {form.phone && <p className="text-xs text-muted-foreground">{form.phone}</p>}
-          {form.panNo && <p className="mt-1 text-xs text-muted-foreground">PAN {form.panNo}</p>}
-        </div>
-
-        <div className="my-4 border-t border-dashed" />
-
-        <div className="flex flex-col gap-2.5" aria-hidden="true">
-          {[28, 20, 24].map((width, i) => (
-            <div key={i} className="flex items-center justify-between gap-4">
-              <div className="h-2 rounded bg-muted" style={{ width: `${width * 4}px` }} />
-              <div className="h-2 w-10 rounded bg-muted" />
-            </div>
-          ))}
-        </div>
-
-        <div className="my-4 border-t border-dashed" />
-
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>VAT{vatRate ? ` (${vatRate}%)` : ''}</span>
-          <div className="h-2 w-10 rounded bg-muted" aria-hidden="true" />
-        </div>
-
-        <div className="my-4 border-t border-dashed" />
-
-        <p
-          className={cn(
-            'whitespace-pre-line break-words text-center text-xs',
-            form.billFooter ? 'text-foreground' : 'text-muted-foreground/60'
-          )}
-        >
-          {form.billFooter || 'Footer message'}
-        </p>
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-sm font-medium">Bill preview</p>
+        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+          Updates as you type
+        </span>
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">Updates as you type.</p>
+
+      <div className="rounded-2xl border bg-muted/50 p-4">
+        <div className="drop-shadow-md">
+          <div className="bg-card px-5 pb-8 pt-6 font-mono" style={TORN_EDGE}>
+            <div className="text-center">
+              <p className={cn('break-words text-base font-semibold', !form.name && 'text-muted-foreground/60')}>
+                {form.name || 'Business name'}
+              </p>
+              {form.address && <p className="mt-1 break-words text-xs text-muted-foreground">{form.address}</p>}
+              {form.phone && <p className="text-xs text-muted-foreground">{form.phone}</p>}
+              {form.panNo && <p className="mt-1 text-xs text-muted-foreground">PAN {form.panNo}</p>}
+            </div>
+
+            <div className="my-4 border-t border-dashed" />
+
+            <div className="flex flex-col gap-2.5" aria-hidden="true">
+              {[28, 20, 24].map((width, i) => (
+                <div key={i} className="flex items-center justify-between gap-4">
+                  <div className="h-2 rounded bg-muted" style={{ width: `${width * 4}px` }} />
+                  <div className="h-2 w-10 rounded bg-muted" />
+                </div>
+              ))}
+            </div>
+
+            <div className="my-4 border-t border-dashed" />
+
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>VAT{vatRate ? ` (${vatRate}%)` : ''}</span>
+              <div className="h-2 w-10 rounded bg-muted" aria-hidden="true" />
+            </div>
+            <div className="mt-2 flex items-center justify-between text-sm font-semibold">
+              <span>Total</span>
+              <div className="h-2.5 w-14 rounded bg-foreground/20" aria-hidden="true" />
+            </div>
+
+            <div className="my-4 border-t border-dashed" />
+
+            <p
+              className={cn(
+                'whitespace-pre-line break-words text-center text-xs',
+                form.billFooter ? 'text-foreground' : 'text-muted-foreground/60'
+              )}
+            >
+              {form.billFooter || 'Footer message'}
+            </p>
+          </div>
+        </div>
+      </div>
     </aside>
   )
 }
@@ -374,7 +430,7 @@ function Field({
           pattern={pattern}
           title={title}
           aria-describedby={hintId}
-          className={suffix ? 'pr-9' : undefined}
+          className={cn('h-10', suffix && 'pr-9')}
         />
         {suffix && (
           <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">

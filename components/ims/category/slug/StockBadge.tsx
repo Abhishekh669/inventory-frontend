@@ -7,7 +7,7 @@ export function StockBadge({ stock, reOrderLevel }: { stock: string; reOrderLeve
   const r: Decimal = toDecimal(reOrderLevel)
 
   if (s.lte(0)) {
-    return <Badge className="bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300">Out of stock</Badge>
+    return <Badge className="bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300">No Stock</Badge>
   }
   if (s.lte(r)) {
     return <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">Low</Badge>

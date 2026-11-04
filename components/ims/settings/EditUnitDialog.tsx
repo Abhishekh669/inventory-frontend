@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { Loader2 } from "lucide-react"
+import { Loader2, Pencil } from "lucide-react"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -88,6 +89,9 @@ export function EditUnitDialog({
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
           <DialogHeader>
+            <div className="mb-1 flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Pencil className="size-5" aria-hidden="true" />
+            </div>
             <DialogTitle>Edit unit</DialogTitle>
             <DialogDescription>Update the name or quantity type of this unit.</DialogDescription>
           </DialogHeader>
@@ -105,6 +109,7 @@ export function EditUnitDialog({
               disabled={isSaving}
               autoFocus
               aria-invalid={Boolean(showError)}
+              className="h-10"
             />
             {showError && (
               <p role="alert" className="text-xs text-destructive">
@@ -113,13 +118,22 @@ export function EditUnitDialog({
             )}
           </div>
 
-          <label className="flex items-center gap-2 text-sm">
+          <label
+            className={cn(
+              "flex cursor-pointer items-start gap-3 rounded-xl border bg-muted/30 p-3.5 transition-colors hover:bg-accent/50",
+              allowDecimal && "border-primary/40 bg-primary/5"
+            )}
+          >
             <Checkbox
               checked={allowDecimal}
               onCheckedChange={(v) => setAllowDecimal(v === true)}
               disabled={isSaving}
+              className="mt-0.5"
             />
-            Allow decimal quantities
+            <span className="flex flex-col gap-0.5">
+              <span className="text-sm font-medium">Allow decimal quantities</span>
+              <span className="text-xs text-muted-foreground">Turn on for units like kg or litre.</span>
+            </span>
           </label>
 
           <DialogFooter>

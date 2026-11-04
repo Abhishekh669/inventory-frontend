@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Loader2 } from "lucide-react"
+import { Loader2, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 import {
@@ -64,6 +64,9 @@ export function DeleteUnitsDialog({
     <AlertDialog open={open} onOpenChange={(next) => !isDeleting && onOpenChange(next)}>
       <AlertDialogContent>
         <AlertDialogHeader>
+          <div className="mb-1 flex size-11 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
+            <Trash2 className="size-5" aria-hidden="true" />
+          </div>
           <AlertDialogTitle>
             {count === 1 ? `Delete "${units[0].name}"?` : `Delete ${count} units?`}
           </AlertDialogTitle>
@@ -73,9 +76,12 @@ export function DeleteUnitsDialog({
         </AlertDialogHeader>
 
         {count > 1 && (
-          <ul className="max-h-40 list-disc overflow-y-auto pl-5 text-sm text-muted-foreground">
+          <ul className="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto rounded-xl border bg-muted/30 p-3">
             {units.map((u) => (
-              <li key={u.id} className="truncate">
+              <li
+                key={u.id}
+                className="max-w-full truncate rounded-md border bg-background px-2 py-1 text-xs font-medium"
+              >
                 {u.name}
               </li>
             ))}

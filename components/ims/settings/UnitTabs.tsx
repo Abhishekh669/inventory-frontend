@@ -54,7 +54,7 @@ export function UnitsTab() {
 
   return (
     <section className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl border bg-card p-3 shadow-sm">
         <div className="relative w-full max-w-sm">
           <Search
             className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
@@ -65,31 +65,31 @@ export function UnitsTab() {
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search units"
             aria-label="Search units"
-            className="pl-9 pr-9"
+            className="h-10 pl-9 pr-9"
           />
           {search && (
             <button
               type="button"
               onClick={() => setSearch("")}
               aria-label="Clear search"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-sm text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
             >
               <X className="size-4" />
             </button>
           )}
         </div>
 
-        <p className="text-sm text-muted-foreground">
+        <Badge variant="secondary" className="tabular-nums">
           {filtered.length} of {units.length}
-        </p>
+        </Badge>
 
-        <Button className="ml-auto" onClick={() => setCreateOpen(true)}>
+        <Button className="ml-auto h-10" onClick={() => setCreateOpen(true)}>
           <Plus data-icon="inline-start" /> Add units
         </Button>
       </div>
 
       {selected.length > 0 && (
-        <div className="flex items-center justify-between gap-3 rounded-lg border bg-background px-4 py-3 shadow-sm">
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-2.5">
           <p className="text-sm font-medium">{selected.length} selected</p>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => setSelectedIds(new Set())}>
@@ -127,15 +127,15 @@ export function UnitsTab() {
           }
         />
       ) : filtered.length === 0 ? (
-        <div className="rounded-lg border border-dashed bg-background px-6 py-12 text-center text-sm text-muted-foreground">
+        <div className="rounded-2xl border border-dashed bg-muted/20 px-6 py-14 text-center text-sm text-muted-foreground">
           No units match &quot;{search}&quot;.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border bg-background">
+        <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-10">
+            <TableHeader className="bg-muted/40">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-12 pl-4">
                   <Checkbox
                     checked={allSelected}
                     indeterminate={someSelected}
@@ -145,31 +145,49 @@ export function UnitsTab() {
                 </TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Quantity type</TableHead>
-                <TableHead className="w-28 text-right">Actions</TableHead>
+                <TableHead className="w-28 pr-4 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map((unit) => (
                 <TableRow key={unit.id} data-state={selectedIds.has(unit.id) ? "selected" : undefined}>
-                  <TableCell>
+                  <TableCell className="pl-4">
                     <Checkbox
                       checked={selectedIds.has(unit.id)}
                       onCheckedChange={(v) => toggleOne(unit.id, v === true)}
                       aria-label={`Select ${unit.name}`}
                     />
                   </TableCell>
-                  <TableCell className="font-medium">{unit.name}</TableCell>
                   <TableCell>
-                    <Badge variant={unit.allow_decimal ? "secondary" : "outline"}>
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 font-mono text-xs font-semibold text-primary"
+                        aria-hidden="true"
+                      >
+                        {unit.name.slice(0, 2)}
+                      </span>
+                      <span className="font-medium">{unit.name}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={unit.allow_decimal ? "secondary" : "outline"} className="gap-1.5">
+                      <span
+                        className={
+                          unit.allow_decimal
+                            ? "size-1.5 rounded-full bg-emerald-500"
+                            : "size-1.5 rounded-full bg-muted-foreground/50"
+                        }
+                        aria-hidden="true"
+                      />
                       {unit.allow_decimal ? "Decimals allowed" : "Whole numbers"}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="pr-4">
                     <div className="flex justify-end gap-1">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="size-8"
+                        className="size-8 rounded-lg"
                         onClick={() => setEditing(unit)}
                         aria-label={`Edit ${unit.name}`}
                       >
@@ -178,7 +196,7 @@ export function UnitsTab() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="size-8 text-destructive hover:text-destructive"
+                        className="size-8 rounded-lg text-destructive hover:bg-destructive/10 hover:text-destructive"
                         onClick={() => setDeleting([unit])}
                         aria-label={`Delete ${unit.name}`}
                       >
@@ -218,10 +236,11 @@ export function UnitsTab() {
 
 function UnitsSkeleton() {
   return (
-    <div className="divide-y rounded-lg border bg-background" aria-busy="true" aria-label="Loading units">
+    <div className="divide-y overflow-hidden rounded-2xl border bg-card shadow-sm" aria-busy="true" aria-label="Loading units">
       {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-4 px-4 py-3">
+        <div key={i} className="flex items-center gap-4 px-4 py-3.5">
           <div className="size-4 animate-pulse rounded bg-muted" />
+          <div className="size-9 animate-pulse rounded-lg bg-muted" />
           <div className="h-4 w-32 animate-pulse rounded bg-muted" />
           <div className="h-5 w-24 animate-pulse rounded-full bg-muted" />
         </div>

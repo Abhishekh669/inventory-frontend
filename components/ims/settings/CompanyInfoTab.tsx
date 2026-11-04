@@ -42,18 +42,18 @@ export function CompanyInfoTab() {
 function SettingsSkeleton() {
   return (
     <div
-      className="grid gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1fr)_20rem]"
+      className="grid gap-x-10 gap-y-6 lg:grid-cols-[minmax(0,1fr)_20rem]"
       aria-busy="true"
       aria-label="Loading settings"
     >
-      <div className="flex flex-col">
-        <SkeletonSection fieldCount={5} fullWidthIndex={2} />
+      <div className="flex flex-col gap-6">
+        <SkeletonSection fieldCount={4} fullWidthIndex={2} />
         <SkeletonSection fieldCount={2} />
         <SkeletonSection fieldCount={1} textarea />
       </div>
       <div className="hidden lg:block">
-        <div className="mb-2 h-4 w-24 animate-pulse rounded bg-muted" />
-        <div className="h-80 animate-pulse rounded-lg border bg-muted/40" />
+        <div className="mb-3 h-4 w-24 animate-pulse rounded bg-muted" />
+        <div className="h-96 animate-pulse rounded-2xl bg-muted/60" />
       </div>
     </div>
   )
@@ -69,16 +69,25 @@ function SkeletonSection({
   textarea?: boolean
 }) {
   return (
-    <div className="border-t py-8 first:border-t-0 first:pt-0">
-      <div className="mb-5 flex flex-col gap-2">
-        <div className="h-4 w-36 animate-pulse rounded bg-muted" />
-        <div className="h-3 w-60 animate-pulse rounded bg-muted" />
+    <div className="rounded-2xl border bg-card shadow-sm">
+      <div className="flex items-center gap-3 border-b px-5 py-4 sm:px-6">
+        <div className="size-9 animate-pulse rounded-xl bg-muted" />
+        <div className="flex flex-col gap-2">
+          <div className="h-4 w-36 animate-pulse rounded bg-muted" />
+          <div className="h-3 w-56 animate-pulse rounded bg-muted" />
+        </div>
       </div>
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid gap-5 px-5 py-5 sm:grid-cols-2 sm:px-6">
         {Array.from({ length: fieldCount }).map((_, i) => (
           <div key={i} className={fullWidthIndex === i ? "sm:col-span-2" : undefined}>
             <div className="mb-2 h-3.5 w-24 animate-pulse rounded bg-muted" />
-            <div className={textarea ? "h-20 w-full animate-pulse rounded-lg bg-muted" : "h-8 w-full animate-pulse rounded-lg bg-muted"} />
+            <div
+              className={
+                textarea
+                  ? "h-20 w-full animate-pulse rounded-lg bg-muted"
+                  : "h-10 w-full animate-pulse rounded-lg bg-muted"
+              }
+            />
           </div>
         ))}
       </div>

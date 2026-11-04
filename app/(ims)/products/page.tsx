@@ -1,9 +1,6 @@
-import React from 'react'
+import ProductManagementPage from "@/components/ims/products/ProductManagementPage";
+import RoutePageWrapper from "@/components/ims/RoutePageWrapper";
 
-function page() {
-  return (
-    <div>page</div>
-  )
+export default function Page() {
+  return <RoutePageWrapper Page={ProductManagementPage} />;
 }
-
-export default page
