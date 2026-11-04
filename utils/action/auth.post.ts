@@ -6,7 +6,8 @@ import { cookies } from "next/headers";
 
 export const loginAction  = async (email : string, password : string) =>{
     try {
-         const response = await axios.post(`${process.env.NEXT_BACKEND_URL}/api/v1/user-service/login`, {
+        console.log("this is hte url of backen d : ", process.env.NEXT_BACKEND_URL)
+        const response = await axios.post(`${process.env.NEXT_BACKEND_URL}/api/v1/user-service/login`, {
             email, password
         })
         const data = response.data;
