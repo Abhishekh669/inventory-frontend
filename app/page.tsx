@@ -1,8 +1,8 @@
-import React from 'react'
+import Link from 'next/link'
 
 function page() {
   return (
-    <div>page</div>
+    <div><Link href={"/login"}>Go to login</Link></div>
   )
 }
 

@@ -2,9 +2,19 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import Decimal from "decimal.js"
-import { Loader2, Plus, X } from "lucide-react"
+import { ChevronsUpDown, Loader2, Plus, X } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxTrigger,
+  ComboboxValue,
+} from "@/components/ui/combobox"
 import {
   Dialog,
   DialogContent,
@@ -15,13 +25,6 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { createProducts } from "@/utils/action/products/product.post"
 import { getActionError } from "@/utils/helper/category-validation"
 import { formatMoney } from "@/utils/helper/format"
@@ -33,6 +36,8 @@ import type { Unit } from "@/utils/types/settings.types"
 
 const MAX_CREATE_PRODUCTS = 30
 const DECIMAL_RE = /^\d+(\.\d+)?$/
+const DEFAULT_STOCK = "100"
+const REORDER_RATIO = "0.6"
 
 type Row = {
   key: number
@@ -43,11 +48,13 @@ type Row = {
   vatRate: string
   costPrice: string
   marginPercent: string
+  sellingPrice: string
   reOrderLevel: string
+  reorderEdited: boolean
   currentStock: string
 }
 
-type RowErrors = Partial<Record<keyof Omit<Row, "key" | "skuEdited">, string>>
+type RowErrors = Partial<Record<keyof Omit<Row, "key" | "skuEdited" | "reorderEdited">, string>>
 
 function skuify(value: string) {
   return value
@@ -67,6 +74,75 @@ function prices(cost: string, vat: string, margin: string) {
   return { costWithVat, selling }
 }
 
+// Margin that produces the given selling price, using the same base as prices(): cost with VAT
+function marginFromSelling(cost: string, vat: string, selling: string) {
+  if (!DECIMAL_RE.test(cost) || !DECIMAL_RE.test(vat) || !DECIMAL_RE.test(selling)) return null
+  const costWithVat = new Decimal(cost).mul(new Decimal(vat).div(100).plus(1))
+  if (costWithVat.isZero()) return null
+  const margin = new Decimal(selling).div(costWithVat).minus(1).mul(100)
+  return margin.isNegative() ? "0" : margin.toFixed(2)
+}
+
+// 60% of the stock, rounded down to a whole number
+function reorderFromStock(stock: string) {
+  if (!DECIMAL_RE.test(stock)) return null
+  return new Decimal(stock).mul(REORDER_RATIO).floor().toFixed(0)
+}
+
+function UnitCombobox({
+  id,
+  units,
+  value,
+  onChange,
+  disabled,
+  invalid,
+}: {
+  id: string
+  units: Unit[]
+  value: string
+  onChange: (unitId: string) => void
+  disabled?: boolean
+  invalid?: boolean
+}) {
+  const names = useMemo(() => units.map((unit) => unit.name), [units])
+  const selectedName = units.find((unit) => unit.id === value)?.name ?? null
+
+  return (
+    <Combobox
+      items={names}
+      value={selectedName}
+      onValueChange={(name) => onChange(units.find((unit) => unit.name === name)?.id ?? "")}
+      disabled={disabled}
+      autoHighlight
+    >
+      <ComboboxTrigger
+        id={id}
+        disabled={disabled}
+        aria-invalid={invalid}
+        render={
+          <Button type="button" variant="outline" className="w-full justify-between font-normal">
+            <ComboboxValue>
+              {(name: string | null) => name ?? <span className="text-muted-foreground">Choose unit</span>}
+            </ComboboxValue>
+            <ChevronsUpDown className="text-muted-foreground" aria-hidden="true" />
+          </Button>
+        }
+      />
+      <ComboboxContent>
+        <ComboboxInput showTrigger={false} placeholder="Search units" />
+        <ComboboxEmpty>No unit found.</ComboboxEmpty>
+        <ComboboxList>
+          {(name: string) => (
+            <ComboboxItem key={name} value={name}>
+              {name}
+            </ComboboxItem>
+          )}
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
+  )
+}
+
 export function CreateProductsDialog({
   open,
   onOpenChange,
@@ -83,6 +159,7 @@ export function CreateProductsDialog({
   onCreated: () => void
 }) {
   const nextKey = useRef(1)
+  const scrollToKey = useRef<number | null>(null)
   const { data: categoryData } = useGetCategories()
   const { data: unitData } = useGetAllUnits()
   const { data: settingData } = useGetSettingInfo()
@@ -91,7 +168,6 @@ export function CreateProductsDialog({
   const resolvedCategoryId =
     categoryId || categoryData?.categories?.find((c) => c.slug === slug)?.id || ""
   const defaultVat = new Decimal(settingData?.setting?.default_vat_rate ?? 13).toFixed(2)
-  const defaultReorder = new Decimal(settingData?.setting?.low_stock_default ?? 0).toFixed(3)
 
   const newRow = (unitId = ""): Row => ({
     key: nextKey.current++,
@@ -102,8 +178,10 @@ export function CreateProductsDialog({
     vatRate: defaultVat,
     costPrice: "0",
     marginPercent: "0",
-    reOrderLevel: defaultReorder,
-    currentStock: "100",
+    sellingPrice: "0.00",
+    reOrderLevel: reorderFromStock(DEFAULT_STOCK) ?? "0",
+    reorderEdited: false,
+    currentStock: DEFAULT_STOCK,
   })
 
   const [rows, setRows] = useState<Row[]>(() => [newRow()])
@@ -122,6 +200,17 @@ export function CreateProductsDialog({
     if (!open || !units.length) return
     setRows((prev) => prev.map((row) => (row.unitId ? row : { ...row, unitId: units[0].id })))
   }, [open, units])
+
+  useEffect(() => {
+    const key = scrollToKey.current
+    if (key === null) return
+    scrollToKey.current = null
+    const rowEl = document.getElementById(`create-row-${key}`)
+    if (!rowEl) return
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    rowEl.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" })
+    document.getElementById(`create-name-${key}`)?.focus({ preventScroll: true })
+  }, [rows])
 
   const errors = useMemo(() => {
     const skuCounts = new Map<string, number>()
@@ -160,8 +249,16 @@ export function CreateProductsDialog({
       numberField("vatRate", row.vatRate, new Decimal(100), 2, "VAT")
       numberField("costPrice", row.costPrice, new Decimal("9999999999"), 4, "Cost")
       numberField("marginPercent", row.marginPercent, new Decimal("9999.99"), 2, "Margin")
+      numberField("sellingPrice", row.sellingPrice, new Decimal("999999999999"), 2, "Selling price")
       numberField("reOrderLevel", row.reOrderLevel, new Decimal("99999999999"), qtyDp, "Re-order")
       numberField("currentStock", row.currentStock, new Decimal("99999999999"), qtyDp, "Stock")
+
+      if (!e.sellingPrice && !e.costPrice && !e.vatRate) {
+        const costWithVat = new Decimal(row.costPrice).mul(new Decimal(row.vatRate).div(100).plus(1))
+        if (new Decimal(row.sellingPrice).lt(costWithVat.toDecimalPlaces(2))) {
+          e.sellingPrice = "Selling price is below cost with VAT"
+        }
+      }
       return e
     })
   }, [rows, units])
@@ -171,11 +268,38 @@ export function CreateProductsDialog({
       prev.map((row) => {
         if (row.key !== key) return row
         const next = { ...row, ...patch }
+
         if ("name" in patch && !row.skuEdited) next.sku = skuify(next.name)
         if ("sku" in patch) next.skuEdited = true
+
+        if ("reOrderLevel" in patch) next.reorderEdited = true
+        if ("currentStock" in patch && !next.reorderEdited) {
+          const level = reorderFromStock(next.currentStock)
+          if (level !== null) next.reOrderLevel = level
+        }
+
+        if ("sellingPrice" in patch) {
+          const margin = marginFromSelling(next.costPrice, next.vatRate, next.sellingPrice)
+          if (margin !== null) next.marginPercent = margin
+        } else if ("costPrice" in patch || "vatRate" in patch || "marginPercent" in patch) {
+          const calc = prices(next.costPrice, next.vatRate, next.marginPercent)
+          if (calc) next.sellingPrice = calc.selling.toFixed(2)
+        }
         return next
       })
     )
+  }
+
+  function addRow() {
+    if (rows.length >= MAX_CREATE_PRODUCTS) return
+    const first = rows[0]
+    const row: Row = {
+      ...newRow(first?.unitId || units[0]?.id || ""),
+      vatRate: first?.vatRate || defaultVat,
+      marginPercent: first?.marginPercent || "0",
+    }
+    scrollToKey.current = row.key
+    setRows((prev) => (prev.length >= MAX_CREATE_PRODUCTS ? prev : [...prev, row]))
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -204,7 +328,7 @@ export function CreateProductsDialog({
         cost_price: new Decimal(row.costPrice).toFixed(4),
         cost_with_vat: calc.costWithVat.toFixed(4),
         margin_percent: new Decimal(row.marginPercent).toFixed(2),
-        selling_price: calc.selling.toFixed(2),
+        selling_price: new Decimal(row.sellingPrice).toFixed(2),
         re_order_level: new Decimal(row.reOrderLevel).toFixed(3),
         current_stock: new Decimal(row.currentStock).toFixed(3),
         is_active: true,
@@ -249,7 +373,7 @@ export function CreateProductsDialog({
               const rowErrors = submitted ? errors[i] : {}
               const calc = prices(row.costPrice, row.vatRate, row.marginPercent)
               return (
-                <li key={row.key} className="rounded-lg border p-3">
+                <li key={row.key} id={`create-row-${row.key}`} className="rounded-lg border p-3">
                   <div className="mb-3 flex items-center justify-between">
                     <p className="text-sm font-medium">Product {i + 1}</p>
                     <Button
@@ -298,25 +422,15 @@ export function CreateProductsDialog({
 
                   <div className="mt-3 grid gap-3 sm:grid-cols-4">
                     <div className="flex flex-col gap-1.5">
-                      <Label>Unit</Label>
-                      <Select
+                      <Label htmlFor={`create-unit-${row.key}`}>Unit</Label>
+                      <UnitCombobox
+                        id={`create-unit-${row.key}`}
+                        units={units}
                         value={row.unitId}
-                        onValueChange={(value) => updateRow(row.key, { unitId: String(value) })}
+                        onChange={(unitId) => updateRow(row.key, { unitId })}
                         disabled={isSaving || !units.length}
-                      >
-                        <SelectTrigger className="w-full" aria-invalid={Boolean(rowErrors?.unitId)}>
-                          <SelectValue placeholder="Choose unit">
-                            {units.find((unit) => unit.id === row.unitId)?.name || "Choose unit"}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {units.map((unit) => (
-                            <SelectItem key={unit.id} value={unit.id}>
-                              {unit.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        invalid={Boolean(rowErrors?.unitId)}
+                      />
                       {rowErrors?.unitId && <p className="text-xs text-destructive">{rowErrors.unitId}</p>}
                     </div>
                     <div className="flex flex-col gap-1.5">
@@ -384,13 +498,31 @@ export function CreateProductsDialog({
                         disabled={isSaving}
                         aria-invalid={Boolean(rowErrors?.reOrderLevel)}
                       />
-                      {rowErrors?.reOrderLevel && (
+                      {rowErrors?.reOrderLevel ? (
                         <p className="text-xs text-destructive">{rowErrors.reOrderLevel}</p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">
+                          {row.reorderEdited ? "Set manually" : "60% of stock, rounded down"}
+                        </p>
                       )}
                     </div>
-                    <div className="rounded-md border bg-muted/40 p-3 text-sm">
-                      <p className="text-xs text-muted-foreground">Selling price</p>
-                      <p className="font-medium">{calc ? formatMoney(calc.selling.toFixed(2)) : "-"}</p>
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor={`create-selling-${row.key}`}>Selling price (Rs)</Label>
+                      <Input
+                        id={`create-selling-${row.key}`}
+                        inputMode="decimal"
+                        value={row.sellingPrice}
+                        onChange={(e) => updateRow(row.key, { sellingPrice: e.target.value })}
+                        disabled={isSaving}
+                        aria-invalid={Boolean(rowErrors?.sellingPrice)}
+                      />
+                      {rowErrors?.sellingPrice ? (
+                        <p className="text-xs text-destructive">{rowErrors.sellingPrice}</p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">
+                          Cost with VAT: {calc ? formatMoney(calc.costWithVat.toFixed(2)) : "-"}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </li>
@@ -403,13 +535,7 @@ export function CreateProductsDialog({
               type="button"
               variant="outline"
               size="sm"
-              onClick={() =>
-                setRows((prev) =>
-                  prev.length >= MAX_CREATE_PRODUCTS
-                    ? prev
-                    : [...prev, { ...newRow(prev[0]?.unitId || units[0]?.id || ""), vatRate: prev[0]?.vatRate || defaultVat, marginPercent: prev[0]?.marginPercent || "0" }]
-                )
-              }
+              onClick={addRow}
               disabled={isSaving || rows.length >= MAX_CREATE_PRODUCTS}
             >
               <Plus data-icon="inline-start" /> Add another

@@ -34,7 +34,7 @@ function CategoryManagementPage({ user }: { user: User }) {
         </header>
 
         {isLoading && <p className="text-sm text-muted-foreground">Loading categories...</p>}
-        {isError && (
+        {(!isLoading && isError) && (
           <p className="text-sm text-destructive">
             {error instanceof Error ? error.message : 'Failed to load categories.'}
           </p>
