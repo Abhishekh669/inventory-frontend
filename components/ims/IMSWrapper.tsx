@@ -1,26 +1,36 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useGetUserFromToken } from "@/utils/hooks/tanstack/users/use-get-user-from-token";
 import { RoleType } from "@/utils/types/user.types";
 import { cn } from "cn";
 import { AppSidebar } from "./AppSideBar";
-
+import { lastRoute } from "@/utils/helper/last-route";
 
 export interface UserPropsTypes {
-    id: string;
-    name: string;
-    email: string;
-    role: RoleType;
+  id: string;
+  name: string;
+  email: string;
+  role: RoleType;
 }
-
-
 
 function IMSWrapper({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { data, isLoading } = useGetUserFromToken();
   const user = data ?? null;
   const [collapsed, setCollapsed] = useState(false);
+
+  // Save the full route (path + query), only while we have a valid user,
+  // so a failed request never overwrites the last good route.
+  useEffect(() => {
+    if (!user) return;
+    const query = searchParams.toString();
+    const fullPath = query ? `${pathname}?${query}` : pathname;
+    console.log("saving route:", fullPath); // remove after testing
+    lastRoute.save(fullPath);
+  }, [user, pathname, searchParams]);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -29,12 +39,7 @@ function IMSWrapper({ children }: { children: React.ReactNode }) {
   }, [isLoading, user, router]);
 
   const sidebarUser: UserPropsTypes | null = user
-    ? {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      }
+    ? { id: user.id, name: user.name, email: user.email, role: user.role }
     : null;
 
   return (
@@ -60,8 +65,6 @@ function IMSWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
-
-
 function SidebarSkeleton() {
   return (
     <div className="fixed top-0 left-0 w-65 min-h-screen bg-white border-r border-gray-100 flex flex-col gap-4 p-4 shrink-0">
@@ -74,6 +77,5 @@ function SidebarSkeleton() {
     </div>
   );
 }
-
 
 export default IMSWrapper;

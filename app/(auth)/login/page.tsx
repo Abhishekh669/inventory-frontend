@@ -1,11 +1,11 @@
 import { Suspense } from "react";
-import { redirect } from "next/navigation";
 import LoginCard from "@/components/auth/LoginCard";
 import { auth } from "@/utils/action/auth.get";
+import RestoreLastRoute from "@/components/auth/RestoreLastRoute";
 
 async function RedirectIfLoggedIn() {
   const session = await auth();
-  if (session) redirect("/dashboard");
+  if (session) return <RestoreLastRoute />;
   return null;
 }
 
@@ -19,22 +19,3 @@ export default function Page() {
     </>
   );
 }
-
-
-
-
-
-// import LoginCard from '@/components/auth/LoginCard';
-// import { auth } from '@/utils/action/auth.get';
-// import { redirect } from 'next/navigation';
-
-// async function page() {
-//     const session = await auth();
-//     if (session) {
-//         redirect("/dashboard")
-//     }
-//     return <LoginCard />
-    
-// }
-
-// export default page
