@@ -30,3 +30,4 @@ export const deleteProducts = async (ids: string[]) => {
    }
   }
 };
+

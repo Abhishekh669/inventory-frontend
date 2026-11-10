@@ -1,6 +1,7 @@
 "use client"
 
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
+import { useState } from "react"
+import { MoreHorizontal, Pencil, Tag, Trash2 } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
@@ -17,6 +18,7 @@ import { cn } from "@/lib/utils"
 import type { ProductsListType } from "@/utils/types/product.types"
 import { formatDate, formatMoney, formatQuantity } from "@/utils/helper/format"
 import { StockBadge } from "../category/slug/StockBadge"
+import { UpdateProductPriceDialog } from "./UpdateProductPriceDialog"
 
 // Column widths in px. The table's min-width is the sum, so keep them in sync.
 const COLS = [
@@ -33,7 +35,7 @@ const COLS = [
   190, // stock (+ badge)
   100, // status
   110, // created
-  52, // actions
+  92, // actions (update price + menu)
 ]
 const TABLE_MIN_WIDTH = COLS.reduce((a, b) => a + b, 0)
 const LAST = COLS.length - 1
@@ -77,6 +79,8 @@ export function ProductsTable({
   isLoading: boolean
   isDimmed: boolean
 }) {
+  const [priceProduct, setPriceProduct] = useState<ProductsListType | null>(null)
+
   const pageIds = products.map((p) => p.id)
   const allSelected = pageIds.length > 0 && pageIds.every((id) => selected.includes(id))
   const someSelected = pageIds.some((id) => selected.includes(id))
@@ -199,37 +203,57 @@ export function ProductsTable({
                     </TableCell>
 
                     <TableCell className={narrowCell}>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          render={
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-8 text-muted-foreground"
-                              aria-label={`Actions for ${p.name}`}
-                            />
-                          }
+                      <div className="flex items-center justify-center gap-0.5">
+                        {/* separate update price button */}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-muted-foreground hover:bg-indigo-50 hover:text-indigo-600"
+                          aria-label={`Update price of ${p.name}`}
+                          title="Update price"
+                          onClick={() => setPriceProduct(p)}
                         >
-                          <MoreHorizontal className="size-4" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => onEdit(p)}>
-                            <Pencil className="mr-2 size-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive" onClick={() => onDelete(p.id)}>
-                            <Trash2 className="mr-2 size-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                          <Tag className="size-4" />
+                        </Button>
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger
+                            render={
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-8 text-muted-foreground"
+                                aria-label={`Actions for ${p.name}`}
+                              />
+                            }
+                          >
+                            <MoreHorizontal className="size-4" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => onEdit(p)}>
+                              <Pencil className="mr-2 size-4" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-destructive" onClick={() => onDelete(p.id)}>
+                              <Trash2 className="mr-2 size-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
           </TableBody>
         </Table>
       </div>
+
+      <UpdateProductPriceDialog
+        product={priceProduct}
+        open={!!priceProduct}
+        onOpenChange={(v) => !v && setPriceProduct(null)}
+      />
     </div>
   )
 }

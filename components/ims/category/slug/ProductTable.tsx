@@ -1,6 +1,7 @@
 "use client"
 
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
+import { useState } from "react"
+import { MoreHorizontal, Pencil, Tag, Trash2 } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
@@ -17,6 +18,7 @@ import { cn } from "@/lib/utils"
 import type { ProductsListType } from "@/utils/types/product.types"
 import { formatDate, formatMoney, formatQuantity } from "@/utils/helper/format"
 import { StockBadge } from "./StockBadge"
+import { UpdateProductPriceDialog } from "../../products/UpdateProductPriceDialog"
 
 // Column widths in px. The table's min-width is the sum, so keep them in sync.
 const COLS = [
@@ -33,7 +35,7 @@ const COLS = [
   190, // stock (+ badge)
   100, // status
   110, // created
-  52, // actions
+  92, // actions (update price + menu)
 ]
 const TABLE_MIN_WIDTH = COLS.reduce((a, b) => a + b, 0)
 const LAST = COLS.length - 1
@@ -77,6 +79,8 @@ export function ProductsTable({
   isLoading: boolean
   isDimmed: boolean
 }) {
+  const [priceProduct, setPriceProduct] = useState<ProductsListType | null>(null)
+
   const pageIds = products.map((p) => p.id)
   const allSelected = pageIds.length > 0 && pageIds.every((id) => selected.includes(id))
   const someSelected = pageIds.some((id) => selected.includes(id))
@@ -128,108 +132,128 @@ export function ProductsTable({
           <TableBody>
             {isLoading
               ? Array.from({ length: 8 }).map((_, i) => (
-                <TableRow key={i} className="hover:bg-transparent">
-                  {COLS.map((_w, j) => (
-                    <TableCell key={j} className={j === 0 || j === LAST ? narrowCell : cell}>
-                      <Skeleton className={j === 0 || j === LAST ? "mx-auto size-4" : "h-4 w-full"} />
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+                  <TableRow key={i} className="hover:bg-transparent">
+                    {COLS.map((_w, j) => (
+                      <TableCell key={j} className={j === 0 || j === LAST ? narrowCell : cell}>
+                        <Skeleton className={j === 0 || j === LAST ? "mx-auto size-4" : "h-4 w-full"} />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
               : products.map((p) => (
-                <TableRow
-                  key={p.id}
-                  data-state={selected.includes(p.id) ? "selected" : undefined}
-                  className={cn("transition-colors", !p.is_active && "text-muted-foreground")}
-                >
-                  <TableCell className={narrowCell}>
-                    <div className="flex justify-center">
-                      <Checkbox
-                        aria-label={`Select ${p.name}`}
-                        checked={selected.includes(p.id)}
-                        onCheckedChange={(c) => toggleOne(p.id, c === true)}
-                      />
-                    </div>
-                  </TableCell>
+                  <TableRow
+                    key={p.id}
+                    data-state={selected.includes(p.id) ? "selected" : undefined}
+                    className={cn("transition-colors", !p.is_active && "text-muted-foreground")}
+                  >
+                    <TableCell className={narrowCell}>
+                      <div className="flex justify-center">
+                        <Checkbox
+                          aria-label={`Select ${p.name}`}
+                          checked={selected.includes(p.id)}
+                          onCheckedChange={(c) => toggleOne(p.id, c === true)}
+                        />
+                      </div>
+                    </TableCell>
 
-                  <TableCell className={`${text} font-medium`}>
-                    <HoverCard>
-                      <HoverCardTrigger render={<span className="block cursor-default truncate" />}>
-                        {p.name}
-                      </HoverCardTrigger>
-                      <HoverCardContent className="w-auto max-w-sm break-words text-sm">
-                        {p.name}
-                      </HoverCardContent>
-                    </HoverCard>
-                  </TableCell>
+                    <TableCell className={`${text} font-medium`}>
+                      <HoverCard>
+                        <HoverCardTrigger render={<span className="block cursor-default truncate" />}>
+                          {p.name}
+                        </HoverCardTrigger>
+                        <HoverCardContent className="w-auto max-w-sm break-words text-sm">
+                          {p.name}
+                        </HoverCardContent>
+                      </HoverCard>
+                    </TableCell>
 
-                  <TableCell className={`${text} truncate text-muted-foreground`} title={p.category_name}>
-                    {p.category_name}
-                  </TableCell>
-                  <TableCell className={`${text} truncate text-muted-foreground`}>{p.unit_name}</TableCell>
+                    <TableCell className={`${text} truncate text-muted-foreground`} title={p.category_name}>
+                      {p.category_name}
+                    </TableCell>
+                    <TableCell className={`${text} truncate text-muted-foreground`}>{p.unit_name}</TableCell>
 
-                  <TableCell className={money}>{formatMoney(p.cost_price)}</TableCell>
-                  <TableCell className={`${money} text-muted-foreground`}>{formatMoney(p.cost_with_vat)}</TableCell>
-                  <TableCell className={`${money} text-muted-foreground`}>
-                    {Number(p.margin_percent).toFixed(2)}%
-                  </TableCell>
-                  <TableCell className={`${money} font-semibold`}>{formatMoney(p.selling_price)}</TableCell>
-                  <TableCell className={`${money} font-medium text-emerald-600 dark:text-emerald-400`}>
-                    {formatMoney(p.profit_per_unit)}
-                  </TableCell>
-                  <TableCell className={`${money} text-muted-foreground`}>
-                    {formatQuantity(p.re_order_level, p.allow_decimal)}
-                  </TableCell>
+                    <TableCell className={money}>{formatMoney(p.cost_price)}</TableCell>
+                    <TableCell className={`${money} text-muted-foreground`}>{formatMoney(p.cost_with_vat)}</TableCell>
+                    <TableCell className={`${money} text-muted-foreground`}>
+                      {Number(p.margin_percent).toFixed(2)}%
+                    </TableCell>
+                    <TableCell className={`${money} font-semibold`}>{formatMoney(p.selling_price)}</TableCell>
+                    <TableCell className={`${money} font-medium text-emerald-600 dark:text-emerald-400`}>
+                      {formatMoney(p.profit_per_unit)}
+                    </TableCell>
+                    <TableCell className={`${money} text-muted-foreground`}>
+                      {formatQuantity(p.re_order_level, p.allow_decimal)}
+                    </TableCell>
 
-                  <TableCell className={money}>
-                    <div className="flex items-center justify-end gap-2">
-                      <span className="truncate">
-                        <span className="font-medium">{formatQuantity(p.current_stock, p.allow_decimal)}</span>{" "}
-                        <span className="text-muted-foreground">{p.unit_name}</span>
-                      </span>
-                      <StockBadge stock={p.current_stock} reOrderLevel={p.re_order_level} />
-                    </div>
-                  </TableCell>
+                    <TableCell className={money}>
+                      <div className="flex items-center justify-end gap-2">
+                        <span className="truncate">
+                          <span className="font-medium">{formatQuantity(p.current_stock, p.allow_decimal)}</span>{" "}
+                          <span className="text-muted-foreground">{p.unit_name}</span>
+                        </span>
+                        <StockBadge stock={p.current_stock} reOrderLevel={p.re_order_level} />
+                      </div>
+                    </TableCell>
 
-                  <TableCell className={text}>
-                    <StatusDot active={p.is_active} />
-                  </TableCell>
-                  <TableCell className={`${text} whitespace-nowrap text-muted-foreground`}>
-                    {formatDate(p.created_at)}
-                  </TableCell>
+                    <TableCell className={text}>
+                      <StatusDot active={p.is_active} />
+                    </TableCell>
+                    <TableCell className={`${text} whitespace-nowrap text-muted-foreground`}>
+                      {formatDate(p.created_at)}
+                    </TableCell>
 
-                  <TableCell className={narrowCell}>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        render={
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8 text-muted-foreground"
-                            aria-label={`Actions for ${p.name}`}
-                          />
-                        }
-                      >
-                        <MoreHorizontal className="size-4" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEdit(p)}>
-                          <Pencil className="mr-2 size-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive" onClick={() => onDelete(p.id)}>
-                          <Trash2 className="mr-2 size-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    <TableCell className={narrowCell}>
+                      <div className="flex items-center justify-center gap-0.5">
+                        {/* separate update price button */}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-muted-foreground hover:bg-indigo-50 hover:text-indigo-600"
+                          aria-label={`Update price of ${p.name}`}
+                          title="Update price"
+                          onClick={() => setPriceProduct(p)}
+                        >
+                          <Tag className="size-4" />
+                        </Button>
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger
+                            render={
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-8 text-muted-foreground"
+                                aria-label={`Actions for ${p.name}`}
+                              />
+                            }
+                          >
+                            <MoreHorizontal className="size-4" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => onEdit(p)}>
+                              <Pencil className="mr-2 size-4" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-destructive" onClick={() => onDelete(p.id)}>
+                              <Trash2 className="mr-2 size-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
           </TableBody>
         </Table>
       </div>
+
+      <UpdateProductPriceDialog
+        product={priceProduct}
+        open={!!priceProduct}
+        onOpenChange={(v) => !v && setPriceProduct(null)}
+      />
     </div>
   )
 }

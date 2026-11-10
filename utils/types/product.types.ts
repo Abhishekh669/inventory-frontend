@@ -153,3 +153,22 @@ export interface ProductPriceHistoryListTypeResponse {
   has_more: boolean;
   next_offset: number;
 }
+
+
+export interface UpdateProductPrice {
+  id: string;
+  old_price: string | number;
+  new_price: string | number; // new unit cost
+  current_vat: string | number;
+  current_margin: string | number;
+}
+
+export interface ProductPriceResult {
+  id: string;
+  vat_rate: string;
+  margin_percent: string;
+  cost_price: string;
+  cost_with_vat: string;
+  selling_price: string;
+  profit_per_unit: string;
+}

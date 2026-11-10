@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -6,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { buttonVariants } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -85,7 +88,9 @@ export function SupplierTable({ suppliers, selectedIds, onToggle, onToggleAll, o
               <TableHead className={head}>Address</TableHead>
               <TableHead className={cn(head, "text-right")}>Balance</TableHead>
               <TableHead className={head}>Status</TableHead>
-              <TableHead className={cn(head, "w-12")} />
+              <TableHead className={cn(head, "w-40")}>
+                <span className="sr-only">Actions</span>
+              </TableHead>
             </TableRow>
           </TableHeader>
 
@@ -151,7 +156,16 @@ export function SupplierTable({ suppliers, selectedIds, onToggle, onToggleAll, o
                   </TableCell>
 
                   <TableCell className="py-3.5 pr-4">
-                    <SupplierRowActions onEdit={() => onEdit(s)} onDelete={() => onDelete(s)} />
+                    <div className="flex items-center justify-end gap-2">
+                      <Link
+                        href={`/suppliers/${s.id}`}
+                        aria-label={`Visit ${s.name}`}
+                        className={buttonVariants({ variant: "outline", size: "sm" })}
+                      >
+                        Visit <ArrowRight data-icon="inline-end" />
+                      </Link>
+                      <SupplierRowActions onEdit={() => onEdit(s)} onDelete={() => onDelete(s)} />
+                    </div>
                   </TableCell>
                 </TableRow>
               );

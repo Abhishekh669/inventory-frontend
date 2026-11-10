@@ -18,12 +18,12 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import type { GetProductsParams, ProductsListType } from "@/utils/types/product.types"
 import type { User } from "@/utils/types/user.types"
-import { deleteProducts } from "@/utils/action/products/product.delete"
 import { DEFAULT_FILTER_DRAFT, ProductFilterDraft, ProductFilters } from "../category/slug/ProductFilters"
 import { useGetProducts } from "@/utils/hooks/tanstack/products/use-get-all-products"
 import { ProductsTable } from "./ProductTable"
 import { TablePagination } from "../category/slug/TablePagination"
 import { EditProductSheet } from "../category/slug/EditProductSheet"
+import { deleteProducts } from "@/utils/action/products/product.delete"
 
 function toParams(draft: ProductFilterDraft, page: number): GetProductsParams {
   const stock = draft.current_stock.trim()
