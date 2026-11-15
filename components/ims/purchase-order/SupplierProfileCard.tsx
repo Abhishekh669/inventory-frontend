@@ -42,7 +42,7 @@ function getBalanceTone(supplier: Supplier) {
     return {
       label: "Account balance",
       status: "Inactive",
-      amount: balance,
+      amount: balance.abs(),
       color: "text-muted-foreground",
       background: "bg-muted/40",
       badge: "bg-muted text-muted-foreground border-border",
@@ -52,7 +52,7 @@ function getBalanceTone(supplier: Supplier) {
 
   if (balance.gt(0)) {
     return {
-      label: "Outstanding",
+      label: "Outstanding balance",
       status: "Payment due",
       amount: balance,
       color: "text-red-600 dark:text-red-400",
@@ -77,7 +77,7 @@ function getBalanceTone(supplier: Supplier) {
   }
 
   return {
-    label: "Outstanding",
+    label: "Outstanding balance",
     status: "Settled",
     amount: balance,
     color: "text-emerald-600 dark:text-emerald-400",
@@ -92,7 +92,7 @@ function StatusChip({ active }: { active: boolean }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium",
+        "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium",
         active
           ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400"
           : "border-border bg-muted text-muted-foreground"
@@ -160,8 +160,8 @@ function DetailItem({
 }) {
   return (
     <div className="flex min-w-0 items-center gap-2.5">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-        <Icon className="size-3.5" />
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border bg-muted/50 text-muted-foreground">
+        <Icon className="size-4" />
       </div>
 
       <div className="min-w-0 flex-1">
@@ -178,20 +178,24 @@ function StatItem({
   icon: Icon,
   label,
   value,
+  color = "text-foreground",
 }: {
   icon: typeof Wallet
   label: string
   value: string
+  color?: string
 }) {
   return (
-    <div className="flex min-w-0 items-center gap-2.5">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-background/80 text-muted-foreground">
-        <Icon className="size-3.5" />
+    <div className="flex min-w-0 items-center gap-2.5 rounded-lg border bg-muted/20 p-3 transition-colors hover:bg-muted/40">
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-background text-muted-foreground shadow-sm">
+        <Icon className="size-4" />
       </div>
 
-      <div className="min-w-0">
-        <p className="text-[11px] text-muted-foreground">{label}</p>
-        <p className="truncate text-sm font-semibold tabular-nums">
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[11px] text-muted-foreground">
+          {label}
+        </p>
+        <p className={cn("truncate text-sm font-semibold tabular-nums", color)}>
           {value}
         </p>
       </div>
@@ -200,7 +204,9 @@ function StatItem({
 }
 
 const notProvided = (
-  <span className="font-normal text-muted-foreground">Not provided</span>
+  <span className="font-normal text-muted-foreground">
+    Not provided
+  </span>
 )
 
 export function SupplierProfileCard({
@@ -215,14 +221,17 @@ export function SupplierProfileCard({
   const tone = getBalanceTone(supplier)
   const BalanceIcon = tone.icon
 
+  const openingBalance = toDecimal(supplier.opening_balance)
+  const creditBalance = toDecimal(supplier.credit_balance)
+
   return (
     <section className="overflow-hidden rounded-xl border bg-card shadow-sm">
-      {/* Compact header */}
+      {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3">
         <div className="flex min-w-0 items-center gap-3">
           <Link
             href="/suppliers"
-            className="flex size-8 shrink-0 items-center justify-center rounded-md border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex size-8 shrink-0 items-center justify-center rounded-lg border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             aria-label="Back to suppliers"
           >
             <ArrowLeft className="size-4" />
@@ -265,7 +274,7 @@ export function SupplierProfileCard({
           size="sm"
           onClick={onCreate}
           disabled={!supplier.is_active}
-          className="h-8 rounded-md"
+          className="h-8 rounded-lg"
         >
           <Plus className="mr-1 size-3.5" />
           New purchase order
@@ -278,15 +287,15 @@ export function SupplierProfileCard({
         </div>
       )}
 
-      {/* Contact left, financial overview right */}
+      {/* Main content */}
       <div className="grid divide-y lg:grid-cols-2 lg:divide-x lg:divide-y-0">
         {/* Contact details */}
         <div className="p-4">
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Contact details
           </h2>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <DetailItem
               icon={Phone}
               label="Phone number"
@@ -338,26 +347,29 @@ export function SupplierProfileCard({
 
         {/* Financial overview */}
         <div className="p-4">
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Account overview
-          </h2>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Account overview
+            </h2>
+            <Wallet className="size-4 text-muted-foreground" />
+          </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            {/* Current balance */}
+          <div className="space-y-3">
+            {/* Main balance card */}
             <div
               className={cn(
-                "flex min-w-0 items-center justify-between gap-2 rounded-lg border p-3 sm:col-span-2",
+                "flex items-center justify-between gap-3 rounded-xl border p-4",
                 tone.background
               )}
             >
               <div className="min-w-0">
-                <p className="text-[11px] font-medium text-muted-foreground">
+                <p className="text-xs font-medium text-muted-foreground">
                   {tone.label}
                 </p>
 
                 <p
                   className={cn(
-                    "mt-0.5 truncate text-lg font-bold tabular-nums",
+                    "mt-1 truncate text-2xl font-bold tracking-tight tabular-nums",
                     tone.color
                   )}
                 >
@@ -366,36 +378,47 @@ export function SupplierProfileCard({
 
                 <span
                   className={cn(
-                    "mt-1 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-medium",
+                    "mt-2 inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-medium",
                     tone.badge
                   )}
                 >
+                  <BalanceIcon className="size-3" />
                   {tone.status}
                 </span>
               </div>
 
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border bg-background/70">
-                <BalanceIcon className={cn("size-4", tone.color)} />
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-xl border bg-background/70">
+                <BalanceIcon className={cn("size-5", tone.color)} />
               </div>
             </div>
 
-            <StatItem
-              icon={Wallet}
-              label="Opening balance"
-              value={formatMoney(
-                toDecimal(supplier.opening_balance).toFixed(2)
-              )}
-            />
+            {/* Secondary account statistics */}
+            <div className="grid grid-cols-2 gap-2">
+              <StatItem
+                icon={Wallet}
+                label="Opening balance"
+                value={formatMoney(openingBalance.toFixed(2))}
+              />
 
-            <StatItem
-              icon={ShoppingCart}
-              label="Purchase orders"
-              value={
-                orderCount === null
-                  ? "—"
-                  : orderCount.toLocaleString()
-              }
-            />
+              <StatItem
+                icon={Wallet}
+                label="Credit balance"
+                value={formatMoney(creditBalance.abs().toFixed(2))}
+                color="text-emerald-600 dark:text-emerald-400"
+              />
+
+              <div className="col-span-2">
+                <StatItem
+                  icon={ShoppingCart}
+                  label="Purchase orders"
+                  value={
+                    orderCount === null
+                      ? "—"
+                      : orderCount.toLocaleString()
+                  }
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>

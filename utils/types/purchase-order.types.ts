@@ -16,6 +16,7 @@ export const PURCHASE_ORDER_STATUSES: PurchaseOrderStatus[] = [
 export interface PurchaseOrderSummary {
   id: string
   po_no: string
+  purchase_id : string | null
   title: string | null
   status: PurchaseOrderStatus
   note: string | null

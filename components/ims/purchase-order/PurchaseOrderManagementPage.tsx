@@ -1,10 +1,9 @@
 import { User } from '@/utils/types/user.types'
-import React from 'react'
+import { AllPurchasesView } from '../purchase/AllPurchasesView'
 
 function PurchaseOrderManagementPage({user}  : {user : User}) {
-  return (
-    <div>PurchaseManagementPage</div>
-  )
+  if(!user)return null
+  return <AllPurchasesView />
 }
 
 export default PurchaseOrderManagementPage

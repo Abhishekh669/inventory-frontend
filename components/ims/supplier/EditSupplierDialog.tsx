@@ -32,6 +32,7 @@ const toValues = (s: Supplier): SupplierFormValues => ({
   pan_no: s.pan_no ?? "",
   address: s.address ?? "",
   opening_balance: s.opening_balance,
+  credit_balance : s.credit_balance,
 });
 
 interface Props {
@@ -97,6 +98,7 @@ export function EditSupplierDialog({ supplier, open, onOpenChange, existing }: P
       // only send when changed, because it also adjusts the current balance
       ...(openingChanged ? { opening_balance: values.opening_balance.trim() || "0" } : {}),
       is_active: isActive,
+      credit_balance : values.credit_balance.trim() || "0"
     });
     setSaving(false);
 

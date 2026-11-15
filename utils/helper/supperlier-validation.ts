@@ -7,6 +7,7 @@ export interface SupplierFormValues {
   pan_no: string;
   address: string;
   opening_balance: string;
+  credit_balance : string;
 }
 
 export type SupplierErrors = Partial<Record<keyof SupplierFormValues, string>>;
@@ -22,6 +23,7 @@ export const emptySupplier = (): SupplierFormValues => ({
   pan_no: "",
   address: "",
   opening_balance: "0",
+  credit_balance : "0"
 });
 
 export const hasErrors = (e: SupplierErrors) => Object.keys(e).length > 0;
@@ -32,6 +34,7 @@ export function validateSupplier(v: SupplierFormValues): SupplierErrors {
   const phone = v.phone.trim();
   const pan = v.pan_no.trim();
   const amount = v.opening_balance.trim();
+  const credit = v.credit_balance.trim();
 
   if (!name) e.name = "Supplier name is required";
   else if (name.length < 2) e.name = "Name must be at least 2 characters";
@@ -47,6 +50,7 @@ export function validateSupplier(v: SupplierFormValues): SupplierErrors {
   if (v.address.trim().length > 250) e.address = "Maximum 250 characters";
 
   if (amount && !AMOUNT_REGEX.test(amount)) e.opening_balance = "Enter a valid amount (max 2 decimals)";
+  if (credit && !AMOUNT_REGEX.test(credit)) e.credit_balance = "Enter a valid amount (max 2 decimals)";
 
   return e;
 }
@@ -58,4 +62,5 @@ export const toCreatePayload = (v: SupplierFormValues): CreateSupplier => ({
   pan_no: v.pan_no.trim() || null,
   address: v.address.trim() || null,
   opening_balance: v.opening_balance.trim() || "0",
+  credit_balance : v.credit_balance.trim() || "0"
 });

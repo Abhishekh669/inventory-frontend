@@ -1,29 +1,53 @@
 "use client";
+
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+
 import {
   LayoutDashboard,
   Package,
   Tags,
-  Boxes,
   Truck,
   ShoppingCart,
-  Receipt,
-  CreditCard,
-  Users,
-  BarChart3,
-  UserCog,
   Settings,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   LogOut,
-  Hammer,
+  BookOpen,
+  Wallet,
+  RotateCcw,
   type LucideIcon,
 } from "lucide-react";
+
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+
 import { cn } from "cn";
-import type { UserPropsTypes } from "./IMSWrapper"; // adjust path/name to where the wrapper lives
-import { AvailableRoutes, canAccessRoute } from "@/utils/rbac/role-n-permission";
+
+import type { UserPropsTypes } from "./IMSWrapper";
+
+import {
+  AvailableRoutes,
+  AppRoutePaths,
+  canAccessRoute,
+} from "@/utils/rbac/role-n-permission";
+
 import { lastRoute } from "@/utils/helper/last-route";
+
+/* -------------------------------------------------------------------------- */
+/*                                   Types                                    */
+/* -------------------------------------------------------------------------- */
+
+interface AppSidebarProps {
+  collapsed: boolean;
+  onToggle: () => void;
+  user: UserPropsTypes;
+}
 
 interface NavItem {
   label: string;
@@ -36,205 +60,367 @@ interface NavGroup {
   items: NavItem[];
 }
 
-const NAV_GROUPS: NavGroup[] = [
+interface SupplierNavItem {
+  label: string;
+  icon: LucideIcon;
+  getHref: (supplierId: string) => string;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                              Navigation Items                              */
+/* -------------------------------------------------------------------------- */
+
+const navGroups: NavGroup[] = [
   {
     title: "Overview",
     items: [
-      { label: "Dashboard", href: AvailableRoutes.DASHBOARD, icon: LayoutDashboard },
+      {
+        label: "Dashboard",
+        href: AvailableRoutes.DASHBOARD,
+        icon: LayoutDashboard,
+      },
     ],
   },
   {
     title: "Inventory",
     items: [
-      { label: "Products", href: AvailableRoutes.PRODUCTS, icon: Package },
-      { label: "Categories", href: AvailableRoutes.CATEGORIES, icon: Tags },
-      { label: "Stock", href: AvailableRoutes.STOCK, icon: Boxes },
-      { label: "Suppliers", href: AvailableRoutes.SUPPLIERS, icon: Truck },
-      { label: "Purchases", href: AvailableRoutes.PURCHASES, icon: ShoppingCart },
-    ],
-  },
-  {
-    title: "Sales",
-    items: [
-      { label: "Billing", href: AvailableRoutes.BILLING, icon: CreditCard },
-      { label: "Sales", href: AvailableRoutes.SALES, icon: Receipt },
-      { label: "Customers", href: AvailableRoutes.CUSTOMERS, icon: Users },
+      {
+        label: "Products",
+        href: AvailableRoutes.PRODUCTS,
+        icon: Package,
+      },
+      {
+        label: "Categories",
+        href: AvailableRoutes.CATEGORIES,
+        icon: Tags,
+      },
+      {
+        label: "All Purchases",
+        href: AvailableRoutes.PURCHASES,
+        icon: ShoppingCart,
+      },
     ],
   },
   {
     title: "Management",
     items: [
-      { label: "Reports", href: AvailableRoutes.REPORTS, icon: BarChart3 },
-      { label: "Users", href: AvailableRoutes.USERS, icon: UserCog },
-      { label: "Settings", href: AvailableRoutes.SETTINGS, icon: Settings },
+      {
+        label: "Settings",
+        href: AvailableRoutes.SETTINGS,
+        icon: Settings,
+      },
     ],
   },
 ];
 
-interface AppSidebarProps {
-  collapsed: boolean;
-  onToggle: () => void;
-  user: UserPropsTypes;
-}
+const supplierNavItems: SupplierNavItem[] = [
+  {
+    label: "Supplier Ledger",
+    icon: BookOpen,
+    getHref: AppRoutePaths.SUPPLIER_LEDGER,
+  },
+  {
+    label: "Supplier Payments",
+    icon: Wallet,
+    getHref: AppRoutePaths.SUPPLIER_PAYMENTS,
+  },
+  {
+    label: "Supplier Purchases",
+    icon: ShoppingCart,
+    getHref: AppRoutePaths.SUPPLIER_PURCHASES,
+  },
+  {
+    label: "Purchase Returns",
+    icon: RotateCcw,
+    getHref: AppRoutePaths.SUPPLIER_RETURNS,
+  },
+];
 
-export function AppSidebar({ collapsed, onToggle, user }: AppSidebarProps) {
+/* -------------------------------------------------------------------------- */
+/*                                App Sidebar                                 */
+/* -------------------------------------------------------------------------- */
+
+export default function AppSidebar({
+  collapsed,
+  onToggle,
+  user,
+}: AppSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Keep only the links this role can open, and drop groups that end up empty.
-  const visibleGroups = NAV_GROUPS.map((group) => ({
-    ...group,
-    items: group.items.filter((item) => canAccessRoute(user.role, item.href)),
-  })).filter((group) => group.items.length > 0);
+  const supplierMatch = pathname.match(
+  /^\/suppliers\/([^/]+)(?:\/|$)/
+);
 
-  const isActive = (href: string) =>
-    pathname === href || pathname.startsWith(href + "/");
+const supplierId = supplierMatch?.[1];
 
-  const initials = user.name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
+const isSupplierRoute =
+  pathname === AvailableRoutes.SUPPLIERS ||
+  pathname.startsWith(`${AvailableRoutes.SUPPLIERS}/`);
+
+const [supplierOpen, setSupplierOpen] = useState(isSupplierRoute);
+
+useEffect(() => {
+  if (isSupplierRoute) {
+    setSupplierOpen(true);
+  }
+}, [isSupplierRoute]);
+
+
+  /* ------------------------------- User Role -------------------------------- */
+
+  const userRole = user.role;
+
+  const canViewSuppliers = canAccessRoute(
+    userRole,
+    AvailableRoutes.SUPPLIERS
+  );
+
+  /* ------------------------------ Active Route ------------------------------ */
+
+  const isActive = (href: string) => {
+    if (href === AvailableRoutes.DASHBOARD) {
+      return pathname === href;
+    }
+
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
+
+  /* ---------------------------- Filter Navigation -------------------------- */
+
+  const filteredNavGroups = navGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) =>
+        canAccessRoute(userRole, item.href)
+      ),
+    }))
+    .filter((group) => group.items.length > 0);
+
+  /* -------------------------------- Logout --------------------------------- */
 
   const handleLogout = () => {
-    // Replace with your real logout (call the API / clear the token / clear the query cache).
     lastRoute.clear();
     router.replace("/login");
   };
 
+  /* ------------------------------ User Details ------------------------------ */
+
+  const userName = user.name || user.email || "User";
+
+  const userInitials = userName
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  /* -------------------------------------------------------------------------- */
+  /*                                   Render                                   */
+  /* -------------------------------------------------------------------------- */
+
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-gray-200/80 bg-white",
-        "transition-all duration-300 ease-in-out",
-        collapsed ? "w-18" : "w-65"
+        "fixed left-0 top-0 z-40 flex h-screen flex-col border-r bg-background transition-all duration-300",
+        collapsed ? "w-[72px]" : "w-64"
       )}
     >
-      {/* Floating collapse button on the sidebar edge */}
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        className="absolute -right-3 top-5 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition-colors hover:bg-gray-50 hover:text-gray-900"
-      >
-        {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-      </button>
+      {/* -------------------------------- Header -------------------------------- */}
 
-      {/* Brand */}
-      <div
-        className={cn(
-          "flex h-16 shrink-0 items-center gap-3 border-b border-gray-100 px-4",
-          collapsed && "justify-center px-0"
-        )}
-      >
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gray-900 text-white shadow-sm">
-          <Hammer size={18} />
-        </div>
+      <div className="flex h-16 items-center justify-between border-b px-4">
         {!collapsed && (
-          <div className="min-w-0 leading-tight">
-            <p className="truncate text-sm font-semibold text-gray-900">Hardware IMS</p>
-            <p className="truncate text-xs text-gray-500">Inventory manager</p>
-          </div>
+          <Link
+            href={AvailableRoutes.DASHBOARD}
+            className="truncate text-lg font-bold"
+          >
+            Inventory
+          </Link>
         )}
+
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-label={
+            collapsed ? "Expand sidebar" : "Collapse sidebar"
+          }
+          className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          {collapsed ? (
+            <ChevronRight className="size-4" />
+          ) : (
+            <ChevronLeft className="size-4" />
+          )}
+        </button>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 [scrollbar-width:thin]">
-        {visibleGroups.map((group, index) => (
-          <div key={group.title} className={cn(index > 0 && "mt-5")}>
-            {collapsed ? (
-              // thin divider instead of the title when collapsed
-              index > 0 && <div className="mx-3 mb-3 border-t border-gray-100" />
-            ) : (
-              <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+      {/* --------------------------------- Nav ---------------------------------- */}
+
+      <nav className="flex-1 overflow-y-auto px-3 py-4">
+        {filteredNavGroups.map((group) => (
+          <div key={group.title} className="mt-5 first:mt-0">
+            {!collapsed && (
+              <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {group.title}
               </p>
             )}
 
-            <div className="space-y-0.5">
+            <div className="space-y-1">
+              {/* ------------------------- Normal Nav Items ------------------------ */}
+
               {group.items.map((item) => {
-                const Icon = item.icon;
                 const active = isActive(item.href);
+
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     title={collapsed ? item.label : undefined}
-                    aria-current={active ? "page" : undefined}
-                    onMouseEnter={() => router.prefetch(item.href)}
                     className={cn(
-                      "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all",
-                      collapsed && "justify-center px-0",
+                      "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
                       active
-                        ? "bg-gray-900 text-white shadow-sm"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                        ? "bg-accent font-medium text-accent-foreground"
+                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                      collapsed && "justify-center px-2"
                     )}
                   >
-                    <Icon
-                      size={18}
-                      className={cn(
-                        "shrink-0 transition-colors",
-                        active ? "text-white" : "text-gray-400 group-hover:text-gray-700"
-                      )}
-                    />
-                    {!collapsed && <span className="truncate">{item.label}</span>}
+                    <item.icon className="size-4 shrink-0" />
+
+                    {!collapsed && (
+                      <span className="truncate">{item.label}</span>
+                    )}
                   </Link>
                 );
               })}
+
+              {/* ------------------------ Supplier Navigation ---------------------- */}
+
+            {group.title === "Inventory" && canViewSuppliers && (
+  <Collapsible
+    open={!collapsed && supplierOpen}
+    onOpenChange={setSupplierOpen}
+    className="space-y-1"
+  >
+    {/* Supplier navigation header */}
+    <div className="flex items-center gap-1">
+      <Link
+        href={AvailableRoutes.SUPPLIERS}
+        title={collapsed ? "Suppliers" : undefined}
+        className={cn(
+          "flex min-w-0 flex-1 items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
+          isSupplierRoute
+            ? "bg-accent font-medium text-accent-foreground"
+            : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+          collapsed && "justify-center px-2"
+        )}
+      >
+        <Truck className="size-4 shrink-0" />
+
+        {!collapsed && <span>Suppliers</span>}
+      </Link>
+
+      {!collapsed && (
+        <CollapsibleTrigger
+          aria-label={
+            supplierOpen
+              ? "Collapse supplier navigation"
+              : "Expand supplier navigation"
+          }
+          className="mr-1 flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          <ChevronDown
+            className={cn(
+              "size-4 transition-transform duration-200",
+              supplierOpen && "rotate-180"
+            )}
+          />
+        </CollapsibleTrigger>
+      )}
+    </div>
+
+    {/* Supplier nested routes */}
+    <CollapsibleContent className="overflow-hidden">
+      {!collapsed && (
+        <div className="ml-5 space-y-1 border-l pl-3 pt-1">
+          {supplierId ? (
+            supplierNavItems
+              .filter((item) =>
+                canAccessRoute(userRole, item.getHref(supplierId))
+              )
+              .map((item) => {
+                const href = item.getHref(supplierId);
+
+                const active = pathname === href;
+
+                return (
+                  <Link
+                    key={item.label}
+                    href={href}
+                    className={cn(
+                      "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
+                      active
+                        ? "bg-accent font-medium text-accent-foreground"
+                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    )}
+                  >
+                    <item.icon className="size-4 shrink-0" />
+
+                    <span className="truncate">{item.label}</span>
+                  </Link>
+                );
+              })
+          ) : (
+            <p className="px-3 py-2 text-xs text-muted-foreground">
+              Select a supplier to view details
+            </p>
+          )}
+        </div>
+      )}
+    </CollapsibleContent>
+  </Collapsible>
+)}
             </div>
           </div>
         ))}
       </nav>
 
-      {/* User footer */}
-      <div className="shrink-0 border-t border-gray-100 p-3">
+      {/* -------------------------------- Footer -------------------------------- */}
+
+      <div className="border-t p-3">
         <div
           className={cn(
-            "flex items-center gap-3 rounded-xl bg-gray-50 p-2.5",
-            collapsed && "justify-center bg-transparent p-0"
+            "flex items-center gap-3",
+            collapsed && "justify-center"
           )}
         >
-          <div
-            title={collapsed ? `${user.name} (${user.role})` : undefined}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-900 text-xs font-semibold text-white"
-          >
-            {initials || "U"}
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+            {userInitials}
           </div>
 
           {!collapsed && (
-            <>
-              <div className="min-w-0 flex-1 leading-tight">
-                <p className="truncate text-sm font-medium text-gray-900">{user.name}</p>
-                <p className="truncate text-xs capitalize text-gray-500">{user.role}</p>
-              </div>
-              <button
-                type="button"
-                onClick={handleLogout}
-                aria-label="Log out"
-                title="Log out"
-                className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
-              >
-                <LogOut size={17} />
-              </button>
-            </>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{userName}</p>
+              <p className="truncate text-xs capitalize text-muted-foreground">
+                {userRole}
+              </p>
+            </div>
           )}
         </div>
 
-        {collapsed && (
-          <button
-            type="button"
-            onClick={handleLogout}
-            aria-label="Log out"
-            title="Log out"
-            className="mt-2 flex w-full justify-center rounded-md p-2 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
-          >
-            <LogOut size={18} />
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={handleLogout}
+          title={collapsed ? "Logout" : undefined}
+          className={cn(
+            "mt-3 flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive",
+            collapsed && "justify-center px-2"
+          )}
+        >
+          <LogOut className="size-4 shrink-0" />
+
+          {!collapsed && <span>Logout</span>}
+        </button>
       </div>
     </aside>
   );
 }
-
-export default AppSidebar;

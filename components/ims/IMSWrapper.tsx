@@ -4,8 +4,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useGetUserFromToken } from "@/utils/hooks/tanstack/users/use-get-user-from-token";
 import { RoleType } from "@/utils/types/user.types";
 import { cn } from "cn";
-import { AppSidebar } from "./AppSideBar";
 import { lastRoute } from "@/utils/helper/last-route";
+import AppSidebar from "./AppSideBar";
 
 export interface UserPropsTypes {
   id: string;

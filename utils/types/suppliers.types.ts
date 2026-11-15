@@ -8,6 +8,7 @@ export interface Supplier {
   pan_no: string | null;
   opening_balance: string;
   balance: string; // amount we owe the supplier
+  credit_balance : string;
   is_active: boolean;
   created_at: string;
 }
@@ -19,6 +20,8 @@ export interface CreateSupplier {
   address?: string | null;
   pan_no?: string | null;
   opening_balance?: string;
+    credit_balance : string;
+
 }
 
 // undefined = leave unchanged
@@ -30,6 +33,7 @@ export interface UpdateSupplier {
   address?: string | null;
   pan_no?: string | null;
   opening_balance?: string;
+  credit_balance : string;
   is_active?: boolean;
 }
 

@@ -84,6 +84,10 @@ export function SupplierCard({ supplier: s, selected, onToggle, onEdit, onDelete
           <span className="text-sm text-muted-foreground">Balance</span>
           <SupplierBalance value={s.balance} className="items-end" />
         </div>
+        <div className="flex items-center justify-between border-t border-black/5 pt-3 dark:border-white/10">
+          <span className="text-sm text-muted-foreground">Credit Balance</span>
+          <SupplierBalance value={s.credit_balance} className="items-end" />
+        </div>
       </CardContent>
     </Card>
   );

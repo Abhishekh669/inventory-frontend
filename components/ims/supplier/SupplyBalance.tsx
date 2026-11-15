@@ -22,3 +22,39 @@ export function SupplierBalance({ value, className }: { value: string; className
     </div>
   );
 }
+
+
+
+// positive = supplier owes us, negative = we owe supplier
+export function SupplierCreditBalance({
+  value,
+  className,
+}: {
+  value: string;
+  className?: string;
+}) {
+  const n = Number(value) || 0;
+
+  return (
+    <div className={cn("flex flex-col", className)}>
+      <span
+        className={cn(
+          "font-semibold tabular-nums",
+          n > 0 && "text-emerald-600",
+          n < 0 && "text-red-600",
+          n === 0 && "text-muted-foreground"
+        )}
+      >
+        {formatMoney(Math.abs(n))}
+      </span>
+
+      <span className="text-xs text-muted-foreground">
+        {n > 0
+          ? "Credit balance"
+          : n < 0
+            ? "Amount payable"
+            : "Settled"}
+      </span>
+    </div>
+  );
+}

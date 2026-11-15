@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Supplier } from "@/utils/types/suppliers.types";
 import { getInitials, getSupplierTone } from "@/utils/helper/supplier";
-import { SupplierBalance } from "./SupplyBalance";
+import { SupplierBalance, SupplierCreditBalance } from "./SupplyBalance";
 import { SupplierRowActions } from "./SupplierRowActions";
 
 export function SupplierStatusBadge({ active }: { active: boolean }) {
@@ -87,6 +87,7 @@ export function SupplierTable({ suppliers, selectedIds, onToggle, onToggleAll, o
               <TableHead className={head}>PAN no</TableHead>
               <TableHead className={head}>Address</TableHead>
               <TableHead className={cn(head, "text-right")}>Balance</TableHead>
+              <TableHead className={cn(head, "text-right")}>Credit Balance</TableHead>
               <TableHead className={head}>Status</TableHead>
               <TableHead className={cn(head, "w-40")}>
                 <span className="sr-only">Actions</span>
@@ -149,6 +150,10 @@ export function SupplierTable({ suppliers, selectedIds, onToggle, onToggleAll, o
 
                   <TableCell className="py-3.5 text-right">
                     <SupplierBalance value={s.balance} className="items-end" />
+                  </TableCell>
+
+                   <TableCell className="py-3.5 text-right">
+                    <SupplierCreditBalance value={s.credit_balance} className="items-end" />
                   </TableCell>
 
                   <TableCell className="py-3.5">

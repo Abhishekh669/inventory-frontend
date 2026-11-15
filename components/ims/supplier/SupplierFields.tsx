@@ -154,6 +154,25 @@ export function SupplierFields({
         />
       </Field>
 
+       <Field
+        label="Credit balance (Rs.)"
+        htmlFor={id("credit_balance")}
+        error={errors.credit_balance}
+        hint={  "Amount you  already paid to supplier"}
+        className={wide ? "lg:col-span-3" : ""}
+      >
+        <Input
+          id={id("credit_balance")}
+          inputMode="decimal"
+          value={values.credit_balance}
+          onChange={(e) => onChange("credit_balance", e.target.value)}
+          placeholder="0"
+          disabled={disabled}
+          className={invalid("credit_balance")}
+        />
+      </Field>
+      
+
       <Field
         label="Address"
         htmlFor={id("address")}

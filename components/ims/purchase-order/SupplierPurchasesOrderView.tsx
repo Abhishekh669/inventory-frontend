@@ -1,9 +1,20 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import Link from "next/link"
 import { useQueryClient } from "@tanstack/react-query"
-import { AlertCircle, ChevronDown, Loader2, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import {
+  AlertCircle,
+  ChevronDown,
+  Eye,
+  Loader2,
+  Pencil,
+  Plus,
+  RotateCcw,
+  ShoppingCart,
+  Trash2,
+} from "lucide-react"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatDate } from "@/utils/helper/format"
 import type { PurchaseOrderFilterValues, PurchaseOrderSummary } from "@/utils/types/purchase-order.types"
@@ -19,6 +30,7 @@ import { PurchaseOrderItemsTable } from "./PurchaseOrderItemTable"
 import { PurchaseOrderStatusBadge } from "./PurchaseOrderStatusBar"
 import { SupplierProfileCard } from "./SupplierProfileCard"
 import { useGetPurchaseOrdersBySupplier } from "@/utils/hooks/tanstack/purchase-order/use-get-purchase-order-by-supplier"
+import { CreatePurchaseDialog } from "../supplier/purchase/CreatePurchaseDialog"
 
 function toFilters(draft: PurchaseOrderFilterDraft): PurchaseOrderFilterValues {
   return {
@@ -31,6 +43,9 @@ function toFilters(draft: PurchaseOrderFilterDraft): PurchaseOrderFilterValues {
 
 const canEdit = (po: PurchaseOrderSummary) => po.status === "draft" || po.status === "sent"
 const canDelete = (po: PurchaseOrderSummary) => po.status === "draft" || po.status === "cancelled"
+const canPurchase = (po: PurchaseOrderSummary) => po.status === "sent"
+const canEditPurchase = (po: PurchaseOrderSummary) =>
+  (po.status === "partial" || po.status === "received" || po.status === "cancelled") && !!po.purchase_id
 
 export function SupplierPurchaseOrdersView({ supplier }: { supplier: Supplier }) {
   const supplierId = supplier.id
@@ -41,6 +56,7 @@ export function SupplierPurchaseOrdersView({ supplier }: { supplier: Supplier })
   const [applied, setApplied] = useState<PurchaseOrderFilterValues>({})
   const [formState, setFormState] = useState<{ open: boolean; id: string | null }>({ open: false, id: null })
   const [deleting, setDeleting] = useState<PurchaseOrderSummary | null>(null)
+  const [purchasing, setPurchasing] = useState<PurchaseOrderSummary | null>(null)
   const [openId, setOpenId] = useState<string | null>(null)
 
   const {
@@ -73,6 +89,14 @@ export function SupplierPurchaseOrdersView({ supplier }: { supplier: Supplier })
     }
   }
 
+  // a purchase changes supplier balance, product stock and product prices
+ function refreshAfterPurchase(purchaseOrderId: string) {
+  refreshOrders(purchaseOrderId)
+  queryClient.invalidateQueries({ queryKey: ["suppliers"] })
+  queryClient.invalidateQueries({ queryKey: ["supplier", supplierId] })
+  queryClient.invalidateQueries({ queryKey: ["get-products"] })
+  queryClient.invalidateQueries({ queryKey: ["get-all-purchases"] })
+}
   return (
     <div className="flex w-full flex-col gap-6">
       <SupplierProfileCard
@@ -118,9 +142,7 @@ export function SupplierPurchaseOrdersView({ supplier }: { supplier: Supplier })
               {hasFilters ? "No purchase orders match these filters" : "No purchase orders yet"}
             </p>
             <p className="text-sm text-muted-foreground">
-              {hasFilters
-                ? "Try a different status or date range."
-                : "Create the first order for this supplier."}
+              {hasFilters ? "Try a different status or date range." : "Create the first order for this supplier."}
             </p>
             {hasFilters ? (
               <Button variant="outline" size="sm" onClick={clearFilters}>
@@ -156,9 +178,7 @@ export function SupplierPurchaseOrdersView({ supplier }: { supplier: Supplier })
                               <PurchaseOrderStatusBadge status={po.status} />
                             </div>
                             <p className="mt-1 font-mono text-xs text-muted-foreground">{po.po_no}</p>
-                            {po.note && (
-                              <p className="mt-1 truncate text-sm text-muted-foreground">{po.note}</p>
-                            )}
+                            {po.note && <p className="mt-1 truncate text-sm text-muted-foreground">{po.note}</p>}
                           </div>
                           <div className="shrink-0 text-xs text-muted-foreground lg:text-right">
                             <p>{formatDate(po.created_at)}</p>
@@ -168,6 +188,26 @@ export function SupplierPurchaseOrdersView({ supplier }: { supplier: Supplier })
                       </button>
 
                       <div className="flex shrink-0 items-center gap-1">
+                        {canPurchase(po) && (
+                          <Button
+                            size="sm"
+                            className="h-9 gap-2"
+                            disabled={!supplierActive}
+                            onClick={() => setPurchasing(po)}
+                          >
+                            <ShoppingCart className="size-4" />
+                            <span className="hidden sm:inline">Purchase</span>
+                          </Button>
+                        )}
+                        {po.purchase_id && (
+                          <Link
+                            href={`/all-purchase/${po.purchase_id}`}
+                            className={buttonVariants({ variant: "outline", size: "sm", className: "h-9 gap-2" })}
+                          >
+                            <Eye className="size-4" />
+                            <span className="hidden sm:inline">View Purchase</span>
+                          </Link>
+                        )}
                         {canEdit(po) && (
                           <Button
                             variant="ghost"
@@ -205,6 +245,17 @@ export function SupplierPurchaseOrdersView({ supplier }: { supplier: Supplier })
                     {expanded && (
                       <div className="border-t px-4 py-4 sm:px-5">
                         <PurchaseOrderItemsTable purchaseOrderId={po.id} />
+                        {canEditPurchase(po) && (
+                          <div className="mt-3 flex justify-end">
+                            <Link
+                              href={`/all-purchase/${po.purchase_id}`}
+                              className={buttonVariants({ variant: "outline", size: "sm" })}
+                            >
+                              <Pencil className="mr-2 size-4" />
+                              Edit purchase
+                            </Link>
+                          </div>
+                        )}
                       </div>
                     )}
                   </article>
@@ -248,6 +299,20 @@ export function SupplierPurchaseOrdersView({ supplier }: { supplier: Supplier })
           setDeleting(null)
         }}
       />
+
+      {purchasing && (
+        <CreatePurchaseDialog
+          key={purchasing.id}
+          open
+          onOpenChange={(open) => !open && setPurchasing(null)}
+          supplier={supplier}
+          purchaseOrder={purchasing}
+          onCreated={(purchaseOrderId) => {
+            refreshAfterPurchase(purchaseOrderId)
+            setPurchasing(null)
+          }}
+        />
+      )}
     </div>
   )
 }
