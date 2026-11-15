@@ -55,7 +55,7 @@ export function PurchaseListCard({ item }: { item: PurchaseListItem }) {
 
         {purchase && (
           <Link
-            href={`/all-purchase/${purchase.purchase_id}`}
+            href={`/all-purchases/${purchase.purchase_id}`}
             className={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-9 shrink-0 gap-2")}
           >
             <Eye className="size-4" aria-hidden="true" />

@@ -201,7 +201,7 @@ export function SupplierPurchaseOrdersView({ supplier }: { supplier: Supplier })
                         )}
                         {po.purchase_id && (
                           <Link
-                            href={`/all-purchase/${po.purchase_id}`}
+                            href={`/all-purchases/${po.purchase_id}`}
                             className={buttonVariants({ variant: "outline", size: "sm", className: "h-9 gap-2" })}
                           >
                             <Eye className="size-4" />
@@ -248,7 +248,7 @@ export function SupplierPurchaseOrdersView({ supplier }: { supplier: Supplier })
                         {canEditPurchase(po) && (
                           <div className="mt-3 flex justify-end">
                             <Link
-                              href={`/all-purchase/${po.purchase_id}`}
+                              href={`/all-purchases/${po.purchase_id}`}
                               className={buttonVariants({ variant: "outline", size: "sm" })}
                             >
                               <Pencil className="mr-2 size-4" />

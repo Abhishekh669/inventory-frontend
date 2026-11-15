@@ -1,4 +1,5 @@
 import Decimal from "decimal.js"
+import { PurchaseOrderItemDetail } from "./purchase-order.types"
 
 export type PurchaseOrderStatus = "draft" | "sent" | "partial" | "received" | "cancelled"
 export type PurchaseStatus = "draft" | "posted" | "cancelled"
@@ -113,4 +114,95 @@ export interface PurchaseFormRow {
   isNew: boolean
   qty: string // quantity the supplier sent
   rate: string
+}
+
+
+
+// ---------- purchase details page ----------
+
+export interface PurchaseSupplier {
+  id: string
+  name: string
+  contact_person: string | null
+  phone: string | null
+  address: string | null
+  pan_no: string | null
+  is_active: boolean
+}
+
+export interface PurchaseDetail {
+  id: string
+  supplier_id: string
+  purchase_order_id: string | null
+  supplier_bill_no: string
+  purchase_date: string
+  excise_duty: string
+  special_discount: string
+  discount: string
+  vat_rate: string
+  freight_charge: string
+  gross_amount: string
+  taxable_amount: string
+  vat_amount: string
+  total: string
+  paid_amount: string
+  returned_amount: string
+  due_amount: string
+  payment_status: PaymentStatus
+  due_date: string | null
+  status: PurchaseStatus
+  note: string | null
+  created_by: string | null
+  created_by_name: string | null
+  created_at: string
+}
+
+export interface PurchaseItemDetail {
+  id: string
+  product_id: string
+  product_name: string
+  product_sku: string
+  unit_name: string
+  allow_decimal: boolean
+  poi_id: string | null
+  qty: string // quantity the supplier sent
+  rate: string
+  vat_amount: string
+  unit_cost: string
+  unit_cost_with_vat: string
+  line_value: string // qty x rate
+  qty_ordered: string | null // null for a product added to the purchase
+  expected_unit_cost: string | null
+}
+
+export interface PurchaseOrderInfo {
+  id: string
+  po_no: string
+  title: string | null
+  order_date: string
+  expected_date: string | null
+  status: PurchaseOrderStatus
+  note: string | null
+  created_by_name: string | null
+  created_at: string
+}
+
+export interface PurchasePayment {
+  id: string
+  amount: string
+  payment_date: string
+  payment_method: PaymentMethod
+  payment_type: "advance" | "regular"
+  note: string | null
+  created_by_name: string | null
+  created_at: string
+}
+
+export interface PurchaseByIdResponse {
+  supplier_data: PurchaseSupplier
+  purchase_data: PurchaseDetail
+  purchase_items: PurchaseItemDetail[]
+  purchase_order_data: PurchaseOrderInfo | null
+  purchase_order_items: PurchaseOrderItemDetail[]
+  payments: PurchasePayment[]
 }
