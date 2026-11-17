@@ -8,9 +8,11 @@ import { PaymentStatusBadge, PurchaseStatusBadge } from "./PurchaseStatusBadges"
 export function PurchaseHeader({
   purchase,
   supplier,
+  actions,
 }: {
   purchase: PurchaseDetail
   supplier: PurchaseSupplier
+  actions?: React.ReactNode
 }) {
   return (
     <div className="flex flex-col gap-4">
@@ -38,9 +40,12 @@ export function PurchaseHeader({
           </p>
         </div>
 
-        <Link href={`/suppliers/${supplier.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
-          <Truck className="mr-2 size-4" /> View supplier
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          {actions}
+          <Link href={`/suppliers/${supplier.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+            <Truck className="mr-2 size-4" /> View supplier
+          </Link>
+        </div>
       </div>
     </div>
   )

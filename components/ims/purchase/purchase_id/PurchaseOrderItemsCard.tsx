@@ -166,7 +166,7 @@ export function PurchaseOrderItemsCard({
                 <TableCell className="pl-6">
                   <p className={cn("font-medium", row.state === "removed" && "line-through")}>{row.name}</p>
                   <p className="font-mono text-xs text-muted-foreground">
-                    {row.sku} · {row.unit}
+                     {row.unit}
                   </p>
                 </TableCell>
                 <TableCell className="text-right tabular-nums">

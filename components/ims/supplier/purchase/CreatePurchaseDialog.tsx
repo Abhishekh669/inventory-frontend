@@ -286,6 +286,7 @@ export function CreatePurchaseDialog({ open, onOpenChange, supplier, purchaseOrd
                 }),
             })
             if (!res.success) return setError(res.error ?? "Could not create the purchase.")
+                
             onCreated(purchaseOrder.id)
         })
     }

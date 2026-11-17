@@ -85,7 +85,6 @@ export function PurchaseOrderItemsTable({ purchaseOrderId }: { purchaseOrderId: 
                   <p className="truncate font-medium" title={item.product_name}>
                     {item.product_name}
                   </p>
-                  <p className="font-mono text-xs text-muted-foreground">{item.product_sku}</p>
                 </TableCell>
                 <TableCell className={`${cell} text-right tabular-nums`}>
                   {formatQuantity(item.qty_ordered, item.allow_decimal)}{" "}

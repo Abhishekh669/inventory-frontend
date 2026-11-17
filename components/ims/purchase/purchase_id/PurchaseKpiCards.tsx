@@ -12,8 +12,8 @@ export function PurchaseKpiCards({ purchase }: { purchase: PurchaseDetail }) {
     { label: "Paid", value: money(purchase.paid_amount), icon: Wallet, tone: "bg-emerald-500/10 text-emerald-600" },
     { label: "Returned", value: money(purchase.returned_amount), icon: Undo2, tone: "bg-amber-500/10 text-amber-600" },
     {
-      label: "Due",
-      value: money(purchase.due_amount),
+      label: due.lt(0) ? "Credit" : "Due",
+      value: money(due.abs().toString()),
       icon: due.gt(0) ? AlertCircle : CheckCircle2,
       tone: due.gt(0) ? "bg-red-500/10 text-red-600" : "bg-emerald-500/10 text-emerald-600",
     },

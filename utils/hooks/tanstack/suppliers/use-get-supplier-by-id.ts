@@ -6,5 +6,8 @@ export const useGetSupplier = (id: string) => {
     queryKey: ["get-supplier", id],
     queryFn: () => getSupplierById(id),
     enabled: !!id,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 };

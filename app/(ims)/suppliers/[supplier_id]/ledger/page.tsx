@@ -1,9 +1,8 @@
-import React from 'react'
-export const instant = false;
-function page() {
-  return (
-    <div>page</div>
-  )
-}
+import RoutePageWrapper from "@/components/ims/RoutePageWrapper";
+import SupplierLedgerManagementPage from "@/components/ims/supplier/ledger/SupplierLedgerManagementPage";
 
-export default page
+export const instant = false;
+
+export default function Page() {
+  return <RoutePageWrapper Page={SupplierLedgerManagementPage} />;
+}

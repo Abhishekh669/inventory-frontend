@@ -92,9 +92,7 @@ export function SupplierPurchaseOrdersView({ supplier }: { supplier: Supplier })
   // a purchase changes supplier balance, product stock and product prices
  function refreshAfterPurchase(purchaseOrderId: string) {
   refreshOrders(purchaseOrderId)
-  queryClient.invalidateQueries({ queryKey: ["suppliers"] })
-  queryClient.invalidateQueries({ queryKey: ["supplier", supplierId] })
-  queryClient.invalidateQueries({ queryKey: ["get-products"] })
+  queryClient.invalidateQueries({ queryKey: ["get-supplier", supplierId] })
   queryClient.invalidateQueries({ queryKey: ["get-all-purchases"] })
 }
   return (

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useSupplier } from '../SupplierContext'
 import { SupplierHeaderCard } from '../SupplierHeaderCard'
 import { AdvancePaymentDialog } from './SupplierAdvancePaymentDialog'
+import { SupplierPaymentList } from './SupplierPaymentList'
 
 function SupplierPaymentManagement() {
   const { supplier } = useSupplier()
@@ -26,12 +27,7 @@ function SupplierPaymentManagement() {
 
       <SupplierHeaderCard supplier={supplier} />
 
-      <main className="rounded-2xl border border-dashed bg-card px-6 py-14 text-center">
-        <p className="text-sm font-medium">Payment history</p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Payments recorded for this supplier will appear here.
-        </p>
-      </main>
+      <SupplierPaymentList supplierId={supplier.id} />
 
       <AdvancePaymentDialog open={advanceOpen} onOpenChange={setAdvanceOpen} supplier={supplier} />
     </div>

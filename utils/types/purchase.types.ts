@@ -173,6 +173,8 @@ export interface PurchaseItemDetail {
   line_value: string // qty x rate
   qty_ordered: string | null // null for a product added to the purchase
   expected_unit_cost: string | null
+
+  returned_qty: string
 }
 
 export interface PurchaseOrderInfo {
@@ -205,4 +207,80 @@ export interface PurchaseByIdResponse {
   purchase_order_data: PurchaseOrderInfo | null
   purchase_order_items: PurchaseOrderItemDetail[]
   payments: PurchasePayment[]
+  returns: PurchaseReturnDetail[]
+}
+
+
+export type PaymentSource = "regular" | "advance"
+
+
+export interface PurchaseReturnItemDetail {
+  id: string
+  purchase_item_id: string
+  product_id: string
+  product_name: string
+  product_sku: string
+  unit_name: string
+  allow_decimal: boolean
+  qty: string
+  amount: string
+  reason: string | null
+}
+
+
+export interface PurchaseReturnDetail {
+  id: string
+  return_no: string
+  return_date: string
+  total: string
+  note: string | null
+  created_by_name: string | null
+  created_at: string
+  items: PurchaseReturnItemDetail[]
+}
+
+
+
+export type UpdatePurchaseItemInput = Omit<CreatePurchaseItemInput, "purchase_order_item_id">
+
+export interface UpdatePurchaseInput {
+  supplier_bill_no: string
+  purchase_date: string
+  due_date: string | null
+  excise_duty: string
+  special_discount: string
+  discount: string
+  vat_rate: string
+  freight_charge: string
+  note: string | null
+  items: UpdatePurchaseItemInput[]
+}
+
+export interface CreatePurchaseReturnInput {
+  return_date: string
+  note: string | null
+  items: { purchase_item_id: string; qty: string; amount: string; reason: string | null }[]
+}
+
+export interface CreatePurchasePaymentInput {
+  amount: string
+  payment_date: string
+  source: PaymentSource
+  payment_method: PaymentMethod
+  note: string | null
+}
+
+export interface PurchaseActionResult {
+  success: boolean
+  message?: string
+  error?: string
+}
+
+
+
+export interface UpdatePurchasePaymentInput {
+  amount: string
+  payment_date: string
+  payment_method: PaymentMethod
+  note: string | null
 }

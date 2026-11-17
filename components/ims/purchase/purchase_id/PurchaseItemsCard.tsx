@@ -90,7 +90,7 @@ export function PurchaseItemsCard({
                     )}
                   </div>
                   <p className="font-mono text-xs text-muted-foreground">
-                    {item.product_sku} · {item.unit_name}
+                   {item.unit_name}
                   </p>
                   {isAddedLater(item) && (
                     <p className="mt-0.5 text-[11px] text-blue-700 dark:text-blue-300">
