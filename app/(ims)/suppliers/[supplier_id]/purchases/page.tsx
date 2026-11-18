@@ -1,9 +1,11 @@
+
+
+
 import RoutePageWrapper from "@/components/ims/RoutePageWrapper";
-import SupplierIdManagementPage from "@/components/ims/purchase-order/SupplierIdManagementPage";
-import SupplierPaymentManagement from "@/components/ims/supplier/payments/SupplierPaymentManagement";
+import { SupplierPurchasesTable } from "@/components/ims/supplier/purchase/SupplierPurchaseTable";
 
 export const instant = false;
 
 export default function Page() {
-  return<></>
+  return <RoutePageWrapper Page={SupplierPurchasesTable} />;
 }

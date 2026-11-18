@@ -40,12 +40,12 @@ function PurchaseIdManagementPage(_props: { user: User }) {
           {order && (
             <PurchaseOrderItemsCard orderItems={data.purchase_order_items} purchaseItems={data.purchase_items} />
           )}
+          <PurchasePaymentsCard data={data} />
           <PurchaseReturnsCard data={data} />
         </div>
 
         <aside className="flex flex-col gap-6">
           <PurchaseBillSummaryCard purchase={purchase} />
-          <PurchasePaymentsCard data={data} />
         </aside>
       </div>
     </div>

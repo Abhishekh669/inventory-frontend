@@ -284,3 +284,74 @@ export interface UpdatePurchasePaymentInput {
   payment_method: PaymentMethod
   note: string | null
 }
+
+
+// ADD to: utils/types/purchase.types.ts
+// (PaymentStatus and PurchaseStatus already exist in that file)
+
+export interface SupplierPurchaseItem {
+  purchase_id: string
+  supplier_id: string
+  supplier_name: string
+  purchase_order_id: string | null
+  po_no: string | null
+  supplier_bill_no: string
+  purchase_date: string // YYYY-MM-DD
+  total: string
+  paid_amount: string
+  due_amount: string
+  payment_status: PaymentStatus
+  status: PurchaseStatus
+  note: string | null
+  created_at: string
+}
+
+export interface SupplierPurchaseFilterValues {
+  payment_status?: PaymentStatus
+  purchase_status?: PurchaseStatus
+  from_date?: string
+  to_date?: string
+}
+
+export interface GetSupplierPurchasesParams extends SupplierPurchaseFilterValues {
+  supplier_id: string
+  limit?: number
+  cursor?: string | null
+}
+
+export interface GetSupplierPurchasesResponse {
+  items: SupplierPurchaseItem[]
+  total: number
+  next_cursor: string | null
+  has_more: boolean
+}
+
+export interface SupplierReturnItem {
+  purchase_return_id: string
+  return_no: string
+  purchase_id: string
+  supplier_bill_no: string
+  supplier_id: string
+  return_date: string // YYYY-MM-DD
+  total: string
+  note: string | null
+  created_at: string
+}
+
+export interface SupplierReturnFilterValues {
+  from_date?: string
+  to_date?: string
+}
+
+export interface GetSupplierReturnsParams extends SupplierReturnFilterValues {
+  supplier_id: string
+  limit?: number
+  cursor?: string | null
+}
+
+export interface GetSupplierReturnsResponse {
+  items: SupplierReturnItem[]
+  total: number
+  next_cursor: string | null
+  has_more: boolean
+}

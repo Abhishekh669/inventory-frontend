@@ -301,9 +301,7 @@ export function CreatePurchaseDialog({ open, onOpenChange, supplier, purchaseOrd
                     </span>
                 )}
             </div>
-            <p className="font-mono text-xs text-muted-foreground">
-                {r.sku} · {r.unit}
-            </p>
+            
         </TableCell>
     )
 

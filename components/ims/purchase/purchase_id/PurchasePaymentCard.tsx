@@ -3,6 +3,14 @@
 import { useState } from "react"
 import { Pencil, Plus, Trash2, Wallet } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { formatDate } from "@/utils/helper/format"
 import { toDecimal } from "@/utils/helper/purchase-cal"
 import { money } from "@/utils/helper/purchase-format"
@@ -37,46 +45,69 @@ export function PurchasePaymentsCard({ data }: { data: PurchaseByIdResponse }) {
             <p className="text-sm text-muted-foreground">No payments recorded yet.</p>
           </div>
         ) : (
-          <ul className="flex flex-col divide-y">
-            {payments.map((p) => (
-              <li key={p.id} className="flex items-start justify-between gap-3 py-3 first:pt-0 last:pb-0">
-                <div className="min-w-0 space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-medium">{formatDate(p.payment_date)}</span>
-                    <Pill className="capitalize text-muted-foreground">{p.payment_method}</Pill>
-                    {p.payment_type === "advance" && (
-                      <Pill className="border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">
-                        From advance
-                      </Pill>
-                    )}
-                  </div>
-                  {p.note && <p className="truncate text-xs text-muted-foreground">{p.note}</p>}
-                  {p.created_by_name && <p className="text-xs text-muted-foreground">by {p.created_by_name}</p>}
-                </div>
-                <div className="flex shrink-0 items-center gap-1">
-                  <span className="mr-1 font-semibold tabular-nums">{money(p.amount)}</span>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="size-8"
-                    aria-label="Edit payment"
-                    onClick={() => setEditing(p)}
-                  >
-                    <Pencil className="size-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="size-8 text-destructive hover:text-destructive"
-                    aria-label="Delete payment"
-                    onClick={() => setDeleting(p)}
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <div className="rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Method</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Note</TableHead>
+                  <TableHead>Created by</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="w-[88px] text-right">
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {payments.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="whitespace-nowrap font-medium">
+                      {formatDate(p.payment_date)}
+                    </TableCell>
+                    <TableCell className="capitalize">{p.payment_method}</TableCell>
+                    <TableCell>
+                      {p.payment_type === "advance" ? (
+                        <Pill className="border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">
+                          From advance
+                        </Pill>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Regular</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="max-w-[200px] truncate text-muted-foreground" title={p.note ?? undefined}>
+                      {p.note || "—"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{p.created_by_name || "—"}</TableCell>
+                    <TableCell className="text-right font-semibold tabular-nums">{money(p.amount)}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="size-8"
+                          aria-label="Edit payment"
+                          onClick={() => setEditing(p)}
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="size-8 text-destructive hover:text-destructive"
+                          aria-label="Delete payment"
+                          onClick={() => setDeleting(p)}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </SectionCard>
 

@@ -19,6 +19,7 @@ export const AvailableRoutes = {
 
   PURCHASES: "/all-purchases",
 
+  STOCK_MOVEMENT : "/stock-movements",
   SETTINGS: "/settings",
 } as const;
 

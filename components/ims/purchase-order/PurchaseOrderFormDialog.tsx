@@ -509,9 +509,7 @@ function PurchaseOrderForm({
                         >
                           <div className="min-w-0">
                             <p className="truncate text-sm font-medium">{line.name}</p>
-                            <p className="mt-0.5 text-xs text-muted-foreground">
-                              <span className="font-mono">{line.sku}</span> · sold in {line.unitName}
-                            </p>
+                           
                           </div>
 
                           <div className="flex flex-col gap-1">

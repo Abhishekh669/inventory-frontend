@@ -99,6 +99,11 @@ const navGroups: NavGroup[] = [
         href: AvailableRoutes.PURCHASES,
         icon: ShoppingCart,
       },
+        {
+        label: "Stock Moments",
+        href: AvailableRoutes.STOCK_MOVEMENT,
+        icon: Tags,
+      },
     ],
   },
   {
